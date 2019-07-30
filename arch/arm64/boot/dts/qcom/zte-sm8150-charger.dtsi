@@ -1,0 +1,130 @@
+&mtp_batterydata {
+
+	/delete-node/ qcom,alium_860_89032_0000_3600mah_averaged_masterslave_sep24th2018;
+	#include "3409296_ZTE_cos_4000mAh_averaged_MasterSlave_Oct30th2018_PM8150BGUI10010.dtsi"
+};
+
+&pm8150b_charger {
+	qcom,sec-charger-config = <1>;
+	qcom,auto-recharge-soc = <99>;
+	qcom,fcc-max-ua = <5000000>;
+	qcom,fv-max-uv = <4450000>;
+	qcom,usb-icl-ua = <2500000>;
+	qcom,dc-icl-ua = <1000000>;
+	qcom,chg-term-src = <1>;
+	qcom,chg-term-current-ma = <(-150)>;
+	qcom,lpd-disable;
+	/* external thermal-mitigation for different case
+	usb fcc @ screen off
+	usb fcc @ screen on
+	dc fcc @ screen off
+	dc fcc @ screen on */
+	qcom,thermal-mitigation
+		= <3900000 3900000 3900000 3900000 3900000 3900000 3000000 2500000 2000000 1000000 500000
+		3900000 3000000 2000000 1000000 1000000 1000000 1000000 500000 300000 300000 300000
+		3000000 2000000 1750000 1500000 1250000 1000000 750000 500000 400000 300000 100000
+		300000 300000 300000 300000 300000 300000 300000 300000 100000 100000 100000>;
+};
+
+&pm8150b_fg {
+	qcom,fg-cutoff-voltage = <3400>;
+	qcom,fg-empty-voltage = <3000>;
+	qcom,ki-coeff-low-chg = <1500>;
+	qcom,ki-coeff-med-chg = <1500>;
+	qcom,ki-coeff-hi-chg = <2200>;
+	qcom,fg-sys-term-current = <(-300)>;
+	qcom,cl-min-temp = <150>;
+	qcom,cl-max-temp = <440>;
+	qcom,cl-max-increment = <20>;
+	qcom,cl-max-decrement = <10>;
+};
+
+&smb1355 {
+	status = "disabled";
+};
+
+&smb1355_charger {
+	status = "disabled";
+};
+
+&soc {
+	charger_policy_service {
+		compatible = "zte,charger-policy-service";
+		policy,enable = <1>;
+		policy,expired-mode-enable = <1>;
+		policy,retry-times = <30>;
+		policy,timeout-seconds = <30>;/*s*/
+		policy,max-capacity = <70>;
+		policy,min-capacity = <50>;
+		policy,bms-phy-name = "bms";
+		policy,battery-phy-name = "battery";
+	};
+
+	batt_cap_learn {
+		compatible = "zte,battery-capacity-learning";
+		bcl,enable = <1>;
+		bcl,retry-times = <30>;
+		bcl,timer-period = <100>;/*ms*/
+		bcl,max-start-capacity = <15>;
+		bcl,max-temp-decidegc = <450>;
+		bcl,min-temp-decidegc = <150>;
+		bcl,max-limit-deciperc = <100>;
+		bcl,min-limit-deciperc = <50>;
+		bcl,max-increment-deciperc = <50>;
+		bcl,max-decrement-deciperc = <100>;
+		bcl,bms-phy-name = "bms";
+		bcl,battery-phy-name = "battery";
+		/*bit7: 0: use zte algorithm calc age; 1: use platform algorithm calc age*/
+		/*bit4: enable zte algorithm*/
+		/*bit3: enable platform algorithm*/
+		/*bit0: platform algorithm mode 0: integral mode; 1: delta mode*/
+		bcl,algorithm-select = <0x88>;
+		bcl,battery-specify-capacity = <3900000>;
+		bcl,battery-specify-voltage = <4440>;
+
+		/*3.4V-3.0V 0.2C delta capacity*/
+		/*age 150ma 768ma(0.2C) 1300ma*/
+		bcl,disch-curr-volt-prop = <100 64 193 393
+						86 82 258 412>;
+
+		/*current: 0.04C - 0.02C delta*/
+		bcl,topoff-prop = <100 90
+				86 130 >;
+
+		/*reduc voltage  50mv 100mv*/
+		bcl,reduc-volt-prop = <100 193 366
+					86 230 396 >;
+	};
+
+	charge_arbitrate_service {
+		compatible = "zte,charge-arbitrate-service";
+		cas,enable = <1>;
+		cas,retry-times = <30>;
+		cas,timeout-seconds = <30>;/*s*/
+		cas,temperature-warm = <430>;
+		cas,temperature-warm-recov = <20>;
+		cas,temperature-cool = <80>;
+		cas,temperature-cool-recov = <20>;
+		cas,normal-topoff = <4>;
+		cas,abnormal-topoff = <8>;
+		cas,max-capacity = <80>;
+		cas,min-capacity = <60>;
+		cas,overstep-times = <3>;
+		cas,bms-phy-name = "bms";
+		cas,battery-phy-name = "battery";
+		cas,bcl-phy-name = "bcl";
+		cas,fcv-phy = "battery";
+		cas,fcc-phy = "battery";
+		cas,topoff-phy = "bms";
+		cas,recharge-soc-phy = "bms";
+		cas,recharge-voltage-phy = "bms";
+		cas,voltage-cc-cv-phy = "bms";
+		/* age, fcv, fcc, rech_soc_1st, rech_soc_2st rech_vol_1st, rech_vol_2st **/
+		cas,age-data = <100 4450000 3900000 99 97 0 0
+				95 4430000 3705000 98 96 0 0
+				90 4410000 3510000 97 95 0 0
+				85 4390000 3315000 96 94 0 0
+				80 4370000 3120000 95 93 0 0
+				75 4350000 2925000 94 92 0 0>;
+	};
+};

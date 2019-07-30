@@ -1,0 +1,19 @@
+/* for touchscreen and key */
+
+&qupv3_se17_i2c {
+	status = "ok";
+	himax-ts@48 {
+		compatible = "himax,hxcommon";
+		reg = <0x48>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <122 0x2>;
+		vdd-supply = <&pm8150_l14>;
+		pinctrl-names = "pmx_ts_init";
+		pinctrl-0 = <&ts_int_init &ts_reset_init>;
+		himax,panel-coords = <0 1080 0 2160>;
+		himax,display-coords = <0 1080 0 2160>;
+		himax,irq-gpio = <&tlmm 122 0x00>;
+		himax,rst-gpio = <&tlmm 54 0x00>;
+		report_type = <1>;
+	};
+};

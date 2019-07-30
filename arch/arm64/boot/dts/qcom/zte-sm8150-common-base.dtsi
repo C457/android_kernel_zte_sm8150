@@ -1,0 +1,20 @@
+/*
+ * this file is use for all the projects in sm8150, included by all the board dts files
+ * this file is used to change qualcomm dtsi which can't be changed by overlay
+ * such as /delete-node/ /delete-property/ and alises
+ * other changes must set in overlay dtsi files
+ */
+
+&qupv3_se4_i2c {
+	/delete-node/ fsa4480@43;
+};
+
+&qupv3_se4_i2c {
+	status = "ok";
+	fsa4480: fsa4480@42 {
+		compatible = "qcom,fsa4480-i2c";
+		reg = <0x42>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&fsa_usbc_ana_en>;
+	};
+};

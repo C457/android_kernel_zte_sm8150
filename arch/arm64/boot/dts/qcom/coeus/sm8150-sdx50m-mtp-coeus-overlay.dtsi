@@ -1,0 +1,151 @@
+
+#include "../zte-sm8150-charger.dtsi"
+#include "touch-key-coeus.dtsi"
+#include "coeus-sm8150-usb.dtsi"
+#include "coeus-sm8150-mtp.dtsi"
+#include "coeus-sm8150-pinctrl.dtsi"
+
+&tlmm {
+	himax {
+		ts_int_init: ts_int_init {
+			mux {
+				pins = "gpio122";
+				function = "gpio";
+				};
+			config {
+				pins = "gpio122";
+				drive-strength = <2>;
+				bias-disable;
+			};
+		};
+
+		ts_reset_init: ts_reset_init {
+			mux {
+				pins = "gpio54";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio54";
+				drive-strength = <2>;
+				bias-disable;
+			};
+		};
+	};
+};
+
+&pm8150l_wled {
+	qcom,string-cfg= <5>;
+	qcom,leds-per-string = <6>;
+	status = "ok";
+};
+
+&mtp_batterydata {
+	qcom,3858573_zte_466573cos_3900mah_averaged_masterslave_mar13th2019 {
+		qcom,jeita-fcc-ranges
+			= <150 199 375000
+			200 249 1150000
+			250 599 3600000
+			600 699 1350000>;
+		qcom,jeita-fv-ranges
+			= <150 199 4450000
+			200 249 4450000
+			250 599 4450000
+			600 699 4100000>;
+	};
+};
+
+&pm8150b_charger {
+	qcom,usb-icl-ua = <3000000>;
+	qcom,dc-icl-ua = <3000000>;
+};
+
+&pm8150b_haptics {
+	qcom,actuator-type = "erm";
+	qcom,vmax-mv = <3000>;
+	qcom,play-rate-us = <6667>;
+	qcom,lra-allow-variable-play-rate;
+
+	wf_0 {
+		/* CLICK */
+		qcom,effect-id = <0>;
+		qcom,wf-vmax-mv = <3300>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e 7e];
+		qcom,wf-play-rate-us = <6667>;
+	};
+	wf_1 {
+		/* DOUBLE CLICK */
+		qcom,effect-id = <1>;
+		qcom,wf-vmax-mv = <3300>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e 7e];
+		qcom,wf-play-rate-us = <7143>;
+	};
+	wf_2 {
+		/* TICK */
+		qcom,effect-id = <2>;
+		qcom,wf-vmax-mv = <3300>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e 7e];
+		qcom,wf-play-rate-us = <4000>;
+	};
+	wf_3 {
+		/* THUD */
+		qcom,effect-id = <3>;
+		qcom,wf-vmax-mv = <3300>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e 7e];
+		qcom,wf-play-rate-us = <6667>;
+	};
+	wf_4 {
+		/* POP */
+		qcom,effect-id = <4>;
+		qcom,wf-vmax-mv = <3300>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e 7e];
+		qcom,wf-play-rate-us = <5000>;
+	};
+	wf_5 {
+		/* HEAVY CLICK */
+		qcom,effect-id = <5>;
+		qcom,wf-vmax-mv = <3300>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e 7e];
+		qcom,wf-play-rate-us = <6667>;
+	};
+};
+
+&qupv3_se4_i2c {
+	ssusb_rederiver: redriver@1a {
+		compatible = "onnn,redriver";
+		reg = <0x1a>;
+		extcon = <&pm8150b_pdphy>, <&pm8150b_pdphy>;
+		eq = /bits/ 8 <0x4 0x4 0x4 0x4 0x4 0x4 0x4 0x4>;
+		flat-gain = /bits/ 8 <0x3 0x1 0x1 0x3 0x3 0x1 0x1 0x3>;
+		output-comp = /bits/ 8 <0x3 0x3 0x3 0x3 0x3 0x3 0x3 0x3>;
+		loss-match = /bits/ 8 <0x1 0x3 0x3 0x1 0x1 0x3 0x3 0x1>;
+	};
+};
+
+&sde_dp {
+	qcom,ssusb-redriver-aux-switch = <&ssusb_rederiver>;
+};
+
+&snd_9360 {
+	status = "disabled";
+};
+
+&clock_audio {
+	status = "disabled";
+};
+
+&wcd_rst_gpio {
+	status = "disabled";
+};
+
+&wcd9xxx_intc {
+	status = "disabled";
+};
+
+&qupv3_se4_i2c {
+	status = "ok";
+	aw9523b@5b {
+		compatible = "aw9523b";
+		reg = <0x5b>;
+		shdn_gpio = <&tlmm 130 0x00>;
+	};
+};

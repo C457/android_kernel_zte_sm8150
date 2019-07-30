@@ -1,0 +1,87 @@
+/* Copyright (c) 2017-2018, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+&mdss_mdp {
+	dsi_nt35695b_truly_fhd_video: qcom,mdss_dsi_nt35695b_truly_fhd_video {
+		qcom,mdss-dsi-panel-name =
+				"nt35695b truly fhd video mode dsi panel";
+		qcom,mdss-dsi-panel-type = "dsi_video_mode";
+		qcom,mdss-dsi-virtual-channel-id = <0>;
+		qcom,mdss-dsi-stream = <0>;
+		qcom,mdss-dsi-bpp = <24>;
+		qcom,mdss-dsi-underflow-color = <0xff>;
+		qcom,mdss-dsi-border-color = <0>;
+		qcom,mdss-dsi-traffic-mode = "burst_mode";
+		qcom,mdss-dsi-bllp-eof-power-mode;
+		qcom,mdss-dsi-bllp-power-mode;
+		qcom,mdss-dsi-lane-0-state;
+		qcom,mdss-dsi-lane-1-state;
+		qcom,mdss-dsi-lane-2-state;
+		qcom,mdss-dsi-lane-3-state;
+		qcom,mdss-dsi-dma-trigger = "trigger_sw";
+		qcom,mdss-dsi-mdp-trigger = "none";
+		qcom,mdss-dsi-reset-sequence = <1 20>, <0 20>, <1 50>;
+		qcom,mdss-dsi-tx-eot-append;
+		qcom,mdss-dsi-post-init-delay = <1>;
+
+		qcom,mdss-dsi-display-timings {
+			timing@0{
+				qcom,mdss-dsi-panel-width = <800>;
+				qcom,mdss-dsi-panel-height = <1280>;
+				qcom,mdss-dsi-h-front-porch = <57>;
+				qcom,mdss-dsi-h-back-porch = <68>;
+				qcom,mdss-dsi-h-pulse-width = <36>;
+				qcom,mdss-dsi-h-sync-skew = <0>;
+				qcom,mdss-dsi-h-sync-pulse = <1>;
+				qcom,mdss-dsi-v-back-porch = <16>;
+				qcom,mdss-dsi-v-front-porch = <9>;
+				qcom,mdss-dsi-v-pulse-width = <2>;
+				qcom,mdss-dsi-panel-framerate = <60>;
+				qcom,mdss-dsi-h-left-border = <0>;
+				qcom,mdss-dsi-h-right-border = <0>;
+				qcom,mdss-dsi-v-top-border = <0>;
+				qcom,mdss-dsi-v-bottom-border = <0>;
+				qcom,mdss-dsi-on-command = [
+					39 01 00 00 00 00 04 B9 FF 83 94
+					39 01 00 00 64 00 05 D9 00 8B 02 07
+					39 01 00 00 00 00 04 B9 FF 83 94
+					39 01 00 00 00 00 03 BA 73 83
+					39 01 00 00 00 00 10 B1 6c 10 10 24 e4 11 f1 80 e4 D7 23 80 C0 D2 58
+					39 01 00 00 00 00 0c B2 00 64 10 07 70 1C 08 08 1C 4D 00
+					39 01 00 00 00 00 0d B4 00 FF 03 5a 03 5a 03 5a 01 6a 01 6a
+					39 01 00 00 0a 00 1f D3 00 06 00 40 1a 08 00 32 10 07 00 07 54 15 0f 05 04 02 12 10 05 07 33 33 0b 0b 37 10 07 07
+					39 01 00 00 0a 00 2d D5 19 19 18 18 1a 1a 1b 1b 04 05 06 07 00 01 02 03 20 21 18 18 18 18 18 18 18 18 18 18 18 18 22 23 18 18 18 18 18 18 18 18 18 18 18 18
+					39 01 00 00 0a 00 2d D6 18 18 19 19 1a 1a 1b 1b 03 02 01 00 07 06 05 04 23 22 18 18 18 18 18 18 18 18 18 18 18 18 21 20 18 18 18 18 18 18 18 18 18 18 18 18
+					39 01 00 00 0a 00 2b E0 00 00 02 2d 30 3b 10 37 06 09 0a 19 0E 11 14 12 14 07 12 15 16 00 01 01 2d 30 3b 10 37 07 09 0B 12 0d 11 13 11 14 08 13 14 19
+					39 01 00 00 00 00 04 c9 1F 00 0A
+					39 01 00 00 0a 00 02 cc 09
+					39 01 00 00 00 00 02 d2 55
+					39 01 00 00 00 00 03 c0 30 14
+					39 01 00 00 00 00 04 bf 41 0e 01
+					39 01 00 00 00 00 05 c7 00 c0 40 c0
+					39 01 00 00 00 00 02 51 ff
+					39 01 00 00 c8 00 02 11 00
+					39 01 00 00 0a 00 02 29 00
+					39 01 00 00 00 00 02 55 13
+					39 01 00 00 00 00 02 53 2c
+				];
+				qcom,mdss-dsi-off-command = [
+					39 01 00 00 78 00 02 53 00
+					05 01 00 00 96 00 02 28 00
+					05 01 00 00 96 00 02 10 00
+				];
+				qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
+				qcom,mdss-dsi-off-command-state = "dsi_lp_mode";
+			};
+		};
+	};
+};

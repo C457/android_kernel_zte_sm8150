@@ -1,0 +1,25 @@
+/*Only  config for non A/B system */
+
+&firmware {
+	android {
+		fstab {
+			compatible = "android,fstab";
+			vendor {
+				compatible = "android,vendor";
+				dev = "/dev/block/platform/soc/8804000.sdhci/by-name/vendor";
+				type = "ext4";
+				mnt_flags = "ro,barrier=1,discard";
+				fsmgr_flags = "wait,avb";
+				status = "ok";
+			};
+			vm-linux {
+				compatible = "android,vm-linux";
+				dev = "/dev/block/platform/soc/8804000.sdhci/by-name/vm-linux";
+				type = "emmc";
+				mnt_flags = "ro";
+				fsmgr_flags = "wait";
+				status = "";
+			};
+		};
+	};
+};

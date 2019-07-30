@@ -1,0 +1,9 @@
+ccflags-y += -Idrivers/media/platform/msm/camera/cam_utils
+ccflags-y += -Idrivers/media/platform/msm/camera/cam_cpas/include
+ccflags-y += -Idrivers/media/platform/msm/camera/cam_sensor_module/cam_sensor_io
+ccflags-y += -Idrivers/media/platform/msm/camera/cam_sensor_module/cam_sensor_utils
+ccflags-y += -Idrivers/media/platform/msm/camera/cam_req_mgr
+ccflags-y += -Idrivers/media/platform/msm/camera/cam_sensor_module/cam_cci
+ccflags-y += -Idrivers/media/platform/msm/camera/cam_smmu/
+obj-$(CONFIG_SPECTRA_CAMERA) += zte_cam_eeprom_dev.o zte_cam_eeprom_core.o zte_cam_eeprom_soc.o
+obj-$(CONFIG_SPECTRA_CAMERA) += imx363_eeprom.o s5k3t1sp_front_eeprom.o s5k3t1sp_aux_eeprom.o ov08a10_eeprom.o s5kgm1sp_eeprom.o

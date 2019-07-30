@@ -1,0 +1,27 @@
+/* for touchscreen and key */
+
+&qupv3_se17_i2c {
+	status = "ok";
+	synaptics@22 {
+		compatible = "synaptics,dsx-i2c";
+		reg = <0x22>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <122 0x2008>;
+		vdd_ana-supply = <&pm8150_l17>;
+		vcc_i2c-supply = <&pm8150_s4>;
+		synaptics,pwr-reg-name = "vdd_ana";
+		synaptics,bus-reg-name = "vcc_i2c";
+		pinctrl-names = "pmx_ts_active", "pmx_ts_suspend";
+		pinctrl-0 = <&ts_int_active &ts_reset_active>;
+		pinctrl-1 = <&ts_int_suspend &ts_reset_suspend>;
+		synaptics,reset-gpio = <&tlmm 54 0x0>;
+		synaptics,irq-gpio = <&tlmm 122 0x0>;
+		synaptics,irq-on-state = <0>;
+		synaptics,irq-flags = <0x2008>; /* IRQF_ONESHOT | IRQF_TRIGGER_LOW */
+		synaptics,power-delay-ms = <100>;
+		synaptics,reset-delay-ms = <100>;
+		synaptics,reset-on-state = <0>;
+		synaptics,reset-active-ms = <20>;
+	};
+};
+

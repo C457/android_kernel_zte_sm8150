@@ -1,0 +1,75 @@
+/*
+ * this file is use for all the projects in sm8150, included by all zte board overlay dts files
+ * the dts configs used by all zte projects can add in this file
+ */
+
+&snd_934x {
+	pinctrl-names = "quat_mi2s_enable", "quat_mi2s_disable";
+	pinctrl-0 = <&quat_mi2s_active &quat_mi2s_sd0_active
+		&quat_mi2s_sd1_active>;
+	pinctrl-1 = <&quat_mi2s_sleep &quat_mi2s_sd0_sleep
+		&quat_mi2s_sd1_sleep>;
+	qcom,rcv-sw-gpio = <&tlmm 42 0>;
+};
+
+&snd_9360 {
+	status = "disabled";
+};
+
+&wcd9360_cdc {
+	status = "disabled";
+};
+
+&wsa881x_70211 {
+	status = "disabled";
+};
+
+&wsa881x_70212 {
+	status = "disabled";
+};
+
+&wsa881x_70213 {
+	status = "disabled";
+};
+
+&wsa881x_70214 {
+	status = "disabled";
+};
+
+&nfc_enable_active {
+	/* active state */
+	mux {
+		pins = "gpio41", "gpio48";
+		function = "gpio";
+	};
+
+	config {
+		pins = "gpio41", "gpio48";
+		drive-strength = <2>; /* 2 MA */
+		bias-pull-up;
+	};
+};
+
+&nfc_enable_suspend {
+	/* sleep state */
+	mux {
+		pins = "gpio41", "gpio48";
+		function = "gpio";
+	};
+
+	config {
+		pins = "gpio41", "gpio48";
+		drive-strength = <2>; /* 2 MA */
+		bias-disable;
+	};
+};
+
+&pm8150_pon_1 {
+	qcom,pon-type = <PON_POWER_ON_TYPE_KPDPWR>;
+	qcom,pull-up;
+	linux,code = <KEY_POWER>;
+	qcom,support-reset = <1>;
+	qcom,s1-timer = <10256>;
+	qcom,s2-timer = <2000>;
+	qcom,s2-type = <8>;
+};

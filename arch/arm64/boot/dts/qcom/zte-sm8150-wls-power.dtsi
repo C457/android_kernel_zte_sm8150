@@ -1,0 +1,84 @@
+/* Copyright (c) 2018, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+#include <dt-bindings/interrupt-controller/irq.h>
+
+&tlmm {
+	wls_int_default: wls_int_default {
+		mux {
+			pins = "gpio120";
+			function = "gpio";
+		};
+		config {
+			pins = "gpio120";
+			drive-strength = <2>;
+			bias-disable;
+			input-enable;
+		};
+	};
+
+	wls_power_active: wls_power_active {
+		mux {
+			pins = "gpio119";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio119";
+			drive-strength = <2>;
+			bias-pull-down;
+			output-low;
+		};
+	};
+
+	wls_power_suspend: wls_power_suspend {
+		mux {
+			pins = "gpio119";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio119";
+			drive-strength = <2>;
+			bias-disable;
+			output-high;
+		};
+	};
+};
+
+&qupv3_se4_i2c {
+	status = "ok";
+
+	IDTP922X: IDT,P922X@61 {
+		compatible = "IDT,P922X-WLS-POWER";
+		reg = <0x61>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		interrupt-parent = <&tlmm>;
+		interrupt_names = "IDTP922X";
+		#interrupts = <376 IRQ_TYPE_EDGE_FALLING>;
+
+		pinctrl-names = "wls_int_default", "wls_power_enable", "wls_power_disable";
+		pinctrl-0 = <&wls_int_default>;
+		pinctrl-1 = <&wls_power_active>;
+		pinctrl-2 = <&wls_power_suspend>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+
+		qcom,wls-int-pin = <&tlmm 120 0>;
+		qcom,wls-pwrgd-pin = <&tlmm 134 0>;
+
+		qcom,wls-ss-good-thr = <115>;
+
+		status = "ok";
+	};
+};

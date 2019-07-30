@@ -1,0 +1,8 @@
+/*
+ * this file is ued to change qualcomm dtsi which can't be changed by overlay
+ * such as /delete-node/ /delete-property/ and alises
+ * other changes must set in overlay dtsi files
+ */
+&qupv3_se17_i2c {
+	/delete-node/ himax-ts@48;
+};

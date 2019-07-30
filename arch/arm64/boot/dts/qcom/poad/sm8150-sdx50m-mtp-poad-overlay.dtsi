@@ -1,0 +1,378 @@
+#include "../zte-sm8150-charger.dtsi"
+#include "../zte-sm8150-wls-power.dtsi"
+#include "../zte-sm8150-usb.dtsi"
+#include "../zte-sm8150-camera-sensor-4G.dtsi"
+#include "touch-backlight-poad.dtsi"
+#include "../dsi-panel-zte-visionox-rm692a4-nootp-cmd.dtsi"/*add by zte for lcd dtsi config begin*/
+#include "../dsi-panel-zte-visionox-rm692a4-otpt3-cmd.dtsi"/*add by zte for lcd dtsi config begin*/
+&qupv3_se9_i2c {
+	status = "ok";
+	nq@28 {
+		compatible = "qcom,nq-nci";
+		reg = <0x28>;
+		qcom,nq-irq = <&tlmm 47 0x00>;
+		qcom,nq-ven = <&tlmm 41 0x00>;
+		qcom,nq-firm = <&tlmm 48 0x00>;
+		qcom,nq-clkreq = <&tlmm 113 0x00>;
+		interrupt-parent = <&tlmm>;
+		qcom,clk-src = "BBCLK3";
+		interrupts = <47 0>;
+		interrupt-names = "nfc_irq";
+		pinctrl-names = "nfc_active", "nfc_suspend";
+		pinctrl-0 = <&nfc_int_active &nfc_enable_active
+					&nfc_clk_req_active>;
+		pinctrl-1 = <&nfc_int_suspend &nfc_enable_suspend
+					&nfc_clk_req_suspend>;
+		clocks = <&clock_rpmh RPMH_LN_BB_CLK3>;
+		clock-names = "ref_clk";
+	};
+};
+
+&snd_934x {
+	qcom,msm-mbhc-usbc-audio-supported = <1>;
+};
+
+&qupv3_se8_i2c {
+	status = "ok";
+		tfa98xx@34 {
+			compatible = "nxp,tfa9894";
+			reg = <0x34>;
+			reset-gpio= <&tlmm 91 0>;
+		};
+		tfa98xx@35 {
+			compatible = "nxp,tfa9894";
+			reg = <0x35>;
+			reset-gpio= <&tlmm 98 0>;
+		};
+};
+
+&tlmm{
+	sx9325_int_active: sx9325_int_active {
+		mux {
+			pins = "gpio49";
+			function = "gpio";
+		};
+		config {
+			pins = "gpio49";
+			drive-strength = <8>;
+			bias-disable;
+			input-enable;
+		};
+	};
+	sx9325_int_suspend: sx9325_int_suspend {
+		mux {
+			pins = "gpio49";
+			function = "gpio";
+		};
+		config {
+			pins = "gpio49";
+			drive-strength = <8>;
+			bias-disable;
+			input-enable;
+		};
+	};
+	sx9325_1_int_active: sx9325_1_int_active {
+		mux {
+			pins = "gpio125";
+			function = "gpio";
+		};
+		config {
+			pins = "gpio125";
+			drive-strength = <8>;
+			bias-disable;
+			input-enable;
+		};
+	};
+	sx9325_1_int_suspend: sx9325_1_int_suspend {
+		mux {
+			pins = "gpio125";
+			function = "gpio";
+		};
+		config {
+			pins = "gpio125";
+			drive-strength = <8>;
+			bias-disable;
+			input-enable;
+		};
+	};
+};
+&qupv3_se4_i2c {
+	status = "ok";
+	sx9325-input@2c {
+		compatible = "zte, sx9325-input";
+		reg = <0x2c>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <49 2>;
+		interrupt-names = "sx9325_irq";
+		pinctrl-names = "sx9325_active", "sx9325_sleep";
+		pinctrl-0 = <&sx9325_int_active>;
+		pinctrl-1 = <&sx9325_int_suspend >;
+	};
+	sx9325_1-input@28 {
+		compatible = "zte, sx9325_1-input";
+		reg = <0x28>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <125 2>;
+		interrupt-names = "sx9325_1_irq";
+		pinctrl-names = "sx9325_1_active", "sx9325_1_sleep";
+		pinctrl-0 = <&sx9325_1_int_active>;
+		pinctrl-1 = <&sx9325_1_int_suspend >;
+	};
+};
+&soc {
+/*add by zte for lcd dtsi config begin*/
+	dsi_visionox_rm692a4_nootp_cmd_display: qcom,dsi-display@22 {
+		label = "dsi_visionox_rm692a4_nootp_cmd_display";
+		qcom,display-type = "primary";
+
+		qcom,dsi-ctrl-num = <0>;
+		qcom,dsi-phy-num = <0>;
+		qcom,dsi-select-clocks = "mux_byte_clk0", "mux_pixel_clk0";
+
+		qcom,dsi-panel = <&dsi_visionox_rm692a4_nootp_cmd>;
+	};
+	dsi_visionox_rm692a4_otpt3_cmd_display: qcom,dsi-display@23 {
+		label = "dsi_visionox_rm692a4_otpt3_cmd_display";
+		qcom,display-type = "primary";
+
+		qcom,dsi-ctrl-num = <0>;
+		qcom,dsi-phy-num = <0>;
+		qcom,dsi-select-clocks = "mux_byte_clk0", "mux_pixel_clk0";
+
+		qcom,dsi-panel = <&dsi_visionox_rm692a4_otpt3_cmd>;
+	};
+/*add by zte for lcd dtsi config end*/
+};
+
+/*add by zte for lcd dtsi config begin*/
+&dsi_panel_pwr_supply {
+	/delete-node/qcom,panel-supply-entry@1;
+	/delete-node/qcom,panel-supply-entry@2;
+};
+
+&dsi_visionox_rm692a4_nootp_cmd {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+	qcom,mdss-dsi-mode-sel-gpio-state = "single_port";
+	qcom,panel-mode-gpio = <&tlmm 7 0>;
+	qcom,platform-te-gpio = <&tlmm 8 0>;
+	qcom,platform-reset-gpio = <&tlmm 6 0>;
+	qcom,5v-boost-gpio = <&tlmm 130 0>;
+
+	qcom,mdss-dsi-t-clk-pre = <0x1D>;
+	qcom,mdss-dsi-t-clk-post = <0x19>;
+	qcom,mdss-dsi-display-timings {
+		timing@0 {
+			qcom,mdss-dsi-panel-phy-timings = [00 23 09 09 26 24
+				09 09 06 02 04 00 1D 19];
+			qcom,display-topology = <1 0 1>;
+			qcom,default-topology-index = <0>;
+			qcom,mdss-dsi-panel-clockrate = <1050000000>;
+		};
+	};
+};
+&dsi_visionox_rm692a4_otpt3_cmd {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+	qcom,mdss-dsi-mode-sel-gpio-state = "single_port";
+	qcom,panel-mode-gpio = <&tlmm 7 0>;
+	qcom,platform-te-gpio = <&tlmm 8 0>;
+	qcom,platform-reset-gpio = <&tlmm 6 0>;
+	qcom,5v-boost-gpio = <&tlmm 130 0>;
+
+	qcom,mdss-dsi-t-clk-pre = <0x1D>;
+	qcom,mdss-dsi-t-clk-post = <0x19>;
+	qcom,mdss-dsi-display-timings {
+		timing@0 {
+			qcom,mdss-dsi-panel-phy-timings = [00 23 09 09 26 24
+				09 09 06 02 04 00 1D 19];
+			qcom,display-topology = <1 0 1>;
+			qcom,default-topology-index = <0>;
+			qcom,mdss-dsi-panel-clockrate = <1050000000>;
+		};
+	};
+};
+&sde_dsi {
+		qcom,dsi-display-list =
+		<&dsi_nt35695b_truly_fhd_video_display
+		&dsi_visionox_rm692a4_amoled_fhd_cmd_display
+		&dsi_visionox_rm692a4_otpt3_cmd_display
+		&dsi_visionox_rm692a4_nootp_cmd_display>;
+};
+/*add by zte for lcd dtsi config end*/
+
+&pm8150b_haptics {
+	qcom,actuator-type = "erm";
+	qcom,vmax-mv = <3300>;
+	qcom,play-rate-us = <4255>;
+	qcom,lra-allow-variable-play-rate;
+
+	wf_0 {
+		/* CLICK */
+		qcom,effect-id = <0>;
+		qcom,wf-vmax-mv = <3300>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e 7e];
+		qcom,wf-play-rate-us = <6667>;
+	};
+	wf_1 {
+		/* DOUBLE CLICK */
+		qcom,effect-id = <1>;
+		qcom,wf-vmax-mv = <3300>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e 7e];
+		qcom,wf-play-rate-us = <7143>;
+	};
+	wf_2 {
+		/* TICK */
+		qcom,effect-id = <2>;
+		qcom,wf-vmax-mv = <3300>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e 7e];
+		qcom,wf-play-rate-us = <4000>;
+	};
+	wf_3 {
+		/* THUD */
+		qcom,effect-id = <3>;
+		qcom,wf-vmax-mv = <3300>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e 7e];
+		qcom,wf-play-rate-us = <6667>;
+	};
+	wf_4 {
+		/* POP */
+		qcom,effect-id = <4>;
+		qcom,wf-vmax-mv = <3300>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e 7e];
+		qcom,wf-play-rate-us = <5000>;
+	};
+	wf_5 {
+		/* HEAVY CLICK */
+		qcom,effect-id = <5>;
+		qcom,wf-vmax-mv = <3300>;
+		qcom,wf-pattern = [7e 7e 7e 7e 7e 7e];
+		qcom,wf-play-rate-us = <6667>;
+	};
+};
+
+&thermal_zones {
+	/* Change from pa-therm1 */
+	pa-therm1-g4 {
+		polling-delay-passive = <100>;
+		polling-delay = <0>;
+		thermal-sensors = <&pm8150_adc_tm ADC_AMUX_THM2_PU2>;
+		thermal-governor = "step_wise";
+		trips {
+			g4_trip0: g4-trip0 {
+				temperature = <105000>;
+				hysteresis = <1000>;
+				type = "passive";
+			};
+			g4_trip1: g4-trip1 {
+				temperature = <115000>;
+				hysteresis = <1000>;
+				type = "passive";
+			};
+			g4_trip2: g4-trip2 {
+				temperature = <125000>;
+				hysteresis = <1000>;
+				type = "passive";
+			};
+		};
+		cooling-maps {
+			g4_cdev0 {
+				trip = <&g4_trip0>;
+				cooling-device =
+					<&modem0_pa 1 1>;
+			};
+			g4_cdev1 {
+				trip = <&g4_trip1>;
+				cooling-device =
+					<&modem0_pa 2 2>;
+			};
+			g4_cdev2 {
+				trip = <&g4_trip2>;
+				cooling-device =
+					<&modem0_pa 3 3>;
+			};
+		};
+	};
+
+	/* Change from modem1-pa2 */
+	modem1-pa2-g5 {
+		polling-delay-passive = <100>;
+		polling-delay = <0>;
+		thermal-governor = "step_wise";
+		thermal-sensors = <&qmi_sensor 102>;
+		trips {
+			g5_trip0: g5-trip0 {
+				temperature = <105000>;
+				hysteresis = <2000>;
+				type = "passive";
+			};
+			g5_trip1: g5-trip1 {
+				temperature = <115000>;
+				hysteresis = <2000>;
+				type = "passive";
+			};
+			g5_trip2: g5-trip2 {
+				temperature = <125000>;
+				hysteresis = <2000>;
+				type = "passive";
+			};
+		};
+		cooling-maps {
+			g5_cdev0 {
+				trip = <&g5_trip0>;
+				cooling-device =
+					<&modem1_pa 1 1>;
+			};
+			g5_cdev1 {
+				trip = <&g5_trip1>;
+				cooling-device =
+					<&modem1_pa 2 2>;
+			};
+			g5_cdev2 {
+				trip = <&g5_trip2>;
+				cooling-device =
+					<&modem1_pa 3 3>;
+			};
+		};
+	};
+
+	/* Change from modem1-modem-usr */
+	modem1-modem-g5-dl {
+		polling-delay-passive = <100>;
+		polling-delay = <0>;
+		thermal-governor = "step_wise";
+		thermal-sensors = <&qmi_sensor 105>;
+		trips {
+			g5_dl_trip0: g5-dl-trip0 {
+				temperature = <65000>;
+				hysteresis = <3000>;
+				type = "passive";
+			};
+			g5_dl_trip1: g5-dl-trip1 {
+				temperature = <115000>;
+				hysteresis = <3000>;
+				type = "passive";
+			};
+			g5_dl_trip2: g5-dl-trip2 {
+				temperature = <125000>;
+				hysteresis = <3000>;
+				type = "passive";
+			};
+		};
+		cooling-maps {
+			g5_dl_cdev0 {
+				trip = <&g5_dl_trip0>;
+				cooling-device =
+					<&modem1_proc 1 1>;
+			};
+			g5_dl_cdev1 {
+				trip = <&g5_dl_trip1>;
+				cooling-device =
+					<&modem1_proc 2 2>;
+			};
+			g5_dl_cdev2 {
+				trip = <&g5_dl_trip2>;
+				cooling-device =
+					<&modem1_proc 3 3>;
+			};
+		};
+	};
+};

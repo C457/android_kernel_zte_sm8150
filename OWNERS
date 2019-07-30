@@ -1,0 +1,47 @@
+owners:
+- zheng.chao@zte.com.cn
+- xiao.jianhua@zte.com.cn
+- zhou.xuezan@zte.com.cn
+- liu.hongyan55@zte.com.cn
+- jiang.wanquan@zte.com.cn
+- ye.ganlin@zte.com.cn
+- si.lulu@zte.com.cn
+- ren.zelong@zte.com.cn
+- tong.changda@zte.com.cn
+- yi.changming@zte.com.cn
+- huang.yanjun1@zte.com.cn
+- zeng.jie258@zte.com.cn
+matchers:
+- regex: drivers/power/supply/.*
+  owners:
+  - zhang.qinli@zte.com.cn
+- regex: arch/arm64/boot/dts/qcom/.*
+  owners:
+  - ge.fangqi@zte.com.cn
+  - ding.xuehua@zte.com.cn
+  - yu.jianhua25@zte.com.cn
+- regex: arch/arm/boot/dts/qcom/.*
+  owners:
+  - ge.fangqi@zte.com.cn
+  - yu.jianhua25@zte.com.cn
+- regex: drivers/video/.*
+  owners:
+  - ge.fangqi@zte.com.cn
+  - yu.jianhua25@zte.com.cn
+- regex: drivers/gpu/.*
+  owners:
+  - ge.fangqi@zte.com.cn
+  - yu.jianhua25@zte.com.cn
+- regex: arch/arm/configs/.*
+  owners:
+  - yu.jianhua25@zte.com.cn
+- regex: arch/arm64/configs/.*
+  owners:
+  - ding.xuehua@zte.com.cn
+  - yu.jianhua25@zte.com.cn
+- regex: drivers/power/supply/qcom/.*
+  owners:
+  - ding.xuehua@zte.com.cn
+- exact: drivers/of/of_batterydata.c
+  owners:
+  - ding.xuehua@zte.com.cn
