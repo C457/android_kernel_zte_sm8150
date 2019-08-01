@@ -1,0 +1,17 @@
+config MACH_ZTE
+	bool "ZTE device"
+	help
+	  Support for ZTE products
+
+config ZTE_BOARD_NAME
+	string "config board dts folder"
+
+menu "ZTE board selection"
+
+config MACH_ZTE_PINE
+	bool "Pine board"
+	select MACH_ZTE
+	help
+	  Support for ZTE Axon 10 Pro (pine)
+
+endmenu
