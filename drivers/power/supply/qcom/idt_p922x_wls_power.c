@@ -2957,12 +2957,12 @@ static int p922x_probe(struct i2c_client *client, const struct i2c_device_id *id
 
 	pr_info("IDTP922X probe\n");
 
-	if (strcmp(STR2(ZTE_BOARD_NAME), "pine") == 0) {
+	if (strcmp(STR2(CONFIG_ZTE_BOARD_NAME), "pine") == 0) {
 		pr_err("IDTP922X probe board is pine\n");
 		idtp9220_rx_fod_5v = idtp9220_rx_fod_5v_pine;
 		idtp9220_rx_fod_9v = idtp9220_rx_fod_9v_pine;
 		idtp9220_rx_fod_12v = idtp9220_rx_fod_12v_pine;
-	} else if (strcmp(STR2(ZTE_BOARD_NAME), "poad") == 0) {
+	} else if (strcmp(STR2(CONFIG_ZTE_BOARD_NAME), "poad") == 0) {
 		pr_err("IDTP922X probe board is poad\n");
 		idtp9220_rx_fod_5v = idtp9220_rx_fod_5v_poad;
 		idtp9220_rx_fod_9v = idtp9220_rx_fod_9v_poad;
