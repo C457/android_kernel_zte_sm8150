@@ -55,7 +55,6 @@
 #include <asm/sizes.h>
 #include <asm/tlb.h>
 #include <asm/alternative.h>
-#include <soc/qcom/vendor/sdlog_mem_reserve.h>
 
 /*
  * We need to be able to catch inadvertent references to memstart_addr
@@ -562,7 +561,6 @@ void __init arm64_memblock_init(void)
 #endif
 
 	early_init_fdt_scan_reserved_mem();
-	sdlog_memory_reserve();
 
 	/* 4GB maximum for 32-bit only capable devices */
 	if (IS_ENABLED(CONFIG_ZONE_DMA))

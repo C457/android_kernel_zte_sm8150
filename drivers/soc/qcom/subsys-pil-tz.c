@@ -33,7 +33,6 @@
 #include <linux/soc/qcom/smem_state.h>
 
 #include "peripheral-loader.h"
-#include <soc/qcom/vendor/modem_fatal_error.h>
 
 #define XO_FREQ			19200000
 #define PROXY_TIMEOUT_MS	10000
@@ -820,7 +819,6 @@ static void log_failure_reason(const struct pil_tz_data *d)
 
 	strlcpy(reason, smem_reason, min(size, (size_t)MAX_SSR_REASON_LEN));
 	pr_err("%s subsystem failure reason: %s.\n", name, reason);
-	modem_fatal_error_update_reason(smem_reason);
 }
 
 static int subsys_shutdown(const struct subsys_desc *subsys, bool force_stop)
