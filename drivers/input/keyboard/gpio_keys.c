@@ -30,8 +30,11 @@
 #include <linux/of.h>
 #include <linux/of_irq.h>
 #include <linux/spinlock.h>
-#include "../../../../../msm-4.14/include/soc/qcom/vendor/board_id.h"
 #include <linux/string.h>
+
+#ifdef CONFIG_ZTE_FEATURE_SWAP_GPIO_KEYS
+#include <soc/qcom/vendor/board_id.h> /*@zte board id*/
+#endif
 
 #define VOL_UP 115
 #define VOL_DOWN 114
@@ -684,7 +687,9 @@ gpio_keys_get_devtree_pdata(struct device *dev)
 	int nbuttons;
 	int id;
 
+#ifdef CONFIG_ZTE_FEATURE_SWAP_GPIO_KEYS
 	id = request_board_id();
+#endif
 	nbuttons = device_get_child_node_count(dev);
 	if (nbuttons == 0)
 		return ERR_PTR(-ENODEV);
@@ -718,7 +723,7 @@ gpio_keys_get_devtree_pdata(struct device *dev)
 
 		fwnode_property_read_string(child, "label", &button->desc);
 
-#ifdef ZTE_FEATURE_SWAP_GPIO_KEYS
+#ifdef CONFIG_ZTE_FEATURE_SWAP_GPIO_KEYS
 		if (id == HALDWARE_BOARD_ID_A21) {
 			if (!strcmp(button->desc, "volume_up")) {
 				button->code = VOL_DOWN;
