@@ -63,22 +63,6 @@ do {									  \
 #define RPM_GLINK_CID_MIN	1
 #define RPM_GLINK_CID_MAX	65536
 
-/*zte_pm add++*/
-#define DEBUG_RX_DONE           (1 << 0)
-#define DEBUG_RX_DATA           (1 << 1)
-#define DEBUG_RX_DATA_DETAILS   (1 << 2)
-static int debug_mask = DEBUG_RX_DONE | DEBUG_RX_DATA;
-module_param(debug_mask, int, 0644);
-
-extern bool can_glink_output(void);
-#define GLINK_INFO_ZTE(fmt, ...)						  \
-do {									  \
-	if (can_glink_output())				  \
-		pr_info(fmt, ##__VA_ARGS__);  \
-} while (0)
-
-/*zte_pm add--*/
-
 struct glink_msg {
 	__le16 cmd;
 	__le16 param1;
@@ -809,12 +793,6 @@ static void qcom_glink_handle_rx_done(struct qcom_glink *glink,
 
 	spin_lock_irqsave(&glink->idr_lock, flags);
 	channel = idr_find(&glink->rcids, cid);
-
-	/* zte_pm add for debug glink issue */
-	if ((debug_mask & DEBUG_RX_DONE) != 0) {
-		GLINK_INFO_ZTE("[POWER] rx_done glink:%s ch:%s\n", glink->name, channel->name);
-	}
-
 	spin_unlock_irqrestore(&glink->idr_lock, flags);
 	if (!channel) {
 		dev_err(glink->dev, "invalid channel id received\n");
@@ -933,9 +911,6 @@ static int qcom_glink_rx_data(struct qcom_glink *glink, size_t avail)
 	int ret = 0;
 	unsigned long flags;
 
-	if ((debug_mask & DEBUG_RX_DATA) != 0) {
-		GLINK_INFO_ZTE("[POWER] rx_data glink:%s\n", glink->name);
-	}
 	if (avail < sizeof(hdr)) {
 		dev_dbg(glink->dev, "Not enough data in fifo\n");
 		return -EAGAIN;
@@ -960,11 +935,6 @@ static int qcom_glink_rx_data(struct qcom_glink *glink, size_t avail)
 		/* Drop the message */
 		goto advance_rx;
 	}
-
-	if ((debug_mask & DEBUG_RX_DATA_DETAILS) != 0) {
-		GLINK_INFO_ZTE("[POWER] rx_data details glink:%s ch:%s\n", glink->name, channel->name);
-	}
-
 	CH_INFO(channel, "chunk_size:%d left_size:%d\n", chunk_size, left_size);
 
 	if (glink->intentless) {

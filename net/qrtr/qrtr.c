@@ -46,15 +46,6 @@
 
 #define AID_VENDOR_QRTR	KGIDT_INIT(2906)
 
-/*zte_pm add++*/
-extern bool can_qrtr_output(void);
-#define QRTR_INFO_ZTE(fmt, ...)						  \
-do {									  \
-	if (can_qrtr_output())				  \
-		pr_info(fmt, ##__VA_ARGS__);  \
-} while (0)
-/*zte_pm add--*/
-
 /**
  * struct qrtr_hdr_v1 - (I|R)PCrouter packet header version 1
  * @version: protocol version
@@ -275,46 +266,27 @@ static void qrtr_log_rx_msg(struct qrtr_node *node, struct sk_buff *skb)
 			  skb->len, cb->confirm_rx, cb->src_node, cb->src_port,
 			  cb->dst_node, cb->dst_port,
 			  (unsigned int)pl_buf, (unsigned int)(pl_buf >> 32));
-		QRTR_INFO_ZTE(
-			  "RX DATA: Len:0x%x CF:0x%x src[0x%x:0x%x] dst[0x%x:0x%x] [%08x %08x]\n",
-			  skb->len, cb->confirm_rx, cb->src_node, cb->src_port,
-			  cb->dst_node, cb->dst_port,
-			  (unsigned int)pl_buf, (unsigned int)(pl_buf >> 32));
 	} else {
 		pkt = (struct qrtr_ctrl_pkt *)(skb->data);
 		if (cb->type == QRTR_TYPE_NEW_SERVER ||
-		    cb->type == QRTR_TYPE_DEL_SERVER) {
+		    cb->type == QRTR_TYPE_DEL_SERVER)
 			QRTR_INFO(node->ilc,
 				  "RX CTRL: cmd:0x%x SVC[0x%x:0x%x] addr[0x%x:0x%x]\n",
 				  cb->type, le32_to_cpu(pkt->server.service),
 				  le32_to_cpu(pkt->server.instance),
 				  le32_to_cpu(pkt->server.node),
 				  le32_to_cpu(pkt->server.port));
-			QRTR_INFO_ZTE(
-				  "RX CTRL: cmd:0x%x SVC[0x%x:0x%x] addr[0x%x:0x%x]\n",
-				  cb->type, le32_to_cpu(pkt->server.service),
-				  le32_to_cpu(pkt->server.instance),
-				  le32_to_cpu(pkt->server.node),
-				  le32_to_cpu(pkt->server.port));
-		} else if (cb->type == QRTR_TYPE_DEL_CLIENT ||
-			 cb->type == QRTR_TYPE_RESUME_TX) {
+		else if (cb->type == QRTR_TYPE_DEL_CLIENT ||
+			 cb->type == QRTR_TYPE_RESUME_TX)
 			QRTR_INFO(node->ilc,
 				  "RX CTRL: cmd:0x%x addr[0x%x:0x%x]\n",
 				  cb->type, le32_to_cpu(pkt->client.node),
 				  le32_to_cpu(pkt->client.port));
-			QRTR_INFO_ZTE(
-				  "RX CTRL: cmd:0x%x addr[0x%x:0x%x]\n",
-				  cb->type, le32_to_cpu(pkt->client.node),
-				  le32_to_cpu(pkt->client.port));
-		} else if (cb->type == QRTR_TYPE_HELLO ||
-			 cb->type == QRTR_TYPE_BYE) {
+		else if (cb->type == QRTR_TYPE_HELLO ||
+			 cb->type == QRTR_TYPE_BYE)
 			QRTR_INFO(node->ilc,
 				  "RX CTRL: cmd:0x%x node[0x%x]\n",
 				  cb->type, cb->src_node);
-			QRTR_INFO_ZTE(
-				  "RX CTRL: cmd:0x%x node[0x%x]\n",
-				  cb->type, cb->src_node);
-		}
 	}
 }
 
