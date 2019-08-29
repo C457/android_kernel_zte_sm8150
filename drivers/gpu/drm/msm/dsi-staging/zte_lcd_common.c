@@ -225,6 +225,7 @@ static ssize_t zte_lcd_proc_hbm_write(struct file *file, const char __user *buff
 		return -ENOMEM;
 
 	if (!g_zte_ctrl_pdata->panel_initialized) {
+		kfree(tmp);
 		pr_info("HBM: Panel not initialized\n");
 		return -ENOMEM;
 	}

@@ -2580,13 +2580,17 @@ int smblib_dp_dm(struct smb_charger *chg, int val)
 		if (rc < 0) {
 			smblib_err(chg, "Couldn't get QC3.0 voltage rc=%d\n", rc);
 		} else {
-			if (pval.intval > QC3_LIMIT_ICL_VOL) {
+			smblib_dbg(chg, PR_MISC, "DP usb mid is %d\n", pval.intval);
+			if (pval.intval < MICRO_5V && chg->pulse_cnt > 10) {
+				/* something wrong with the charger, can't increase voltage
+				 * any more, stop limit usb_icl_votable
+				 */
+				vote(chg->usb_icl_votable, SW_QC3_VOTER, false, target_icl_ua);
+			} else {
 				target_icl_ua = chg->qc3_max_power /
 								(QC3_STEP_VOL_MV * chg->pulse_cnt + QC3_BASE_VOL_MV);
 				smblib_dbg(chg, PR_MISC, "DP PULSE target_icl_ua is %d\n", target_icl_ua);
 				vote(chg->usb_icl_votable, SW_QC3_VOTER, true, target_icl_ua);
-			} else {
-				vote(chg->usb_icl_votable, SW_QC3_VOTER, false, target_icl_ua);
 			}
 		}
 
@@ -5152,15 +5156,17 @@ static void smblib_handle_sdp_enumeration_done(struct smb_charger *chg,
 		   rising ? "rising" : "falling");
 }
 
-static void smblib_dump_regs(struct smb_charger *chg);
-
 static void smblib_raise_qc3_vbus_work(struct work_struct *work)
 {
 	union power_supply_propval val = {0, };
 	int i, usb_present = 0, vbus_pre = 0, vbus_now = 0;
-	int icl_detect = 1500000, icl_pre = 0, icl_now = 0;
+	int icl_detect = QC3_ICL_DETECT_START_ICL, icl_pre = 0, icl_now = 0;
+	int icl_delta = QC3_ICL_DETECT_DELTA_ICL;
+	int batt_temp = 0, batt_voltage = 0;
+	int force_fcc = 0;
 	int R_cal = 0;
 	int rc = 0, try_times = 0;
+	bool weak_adapter_recheck = false;
 	struct smb_charger *chg = container_of(work, struct smb_charger,
 						raise_qc3_vbus_work.work);
 
@@ -5197,13 +5203,51 @@ static void smblib_raise_qc3_vbus_work(struct work_struct *work)
 			return;
 		}
 
-		vote_force_active(chg->fcc_votable, true, QC3_DETECT_POWER_FCC);
+		rc = smblib_get_prop_usb_voltage_now(chg, &val);
+		if (rc < 0) {
+			pr_err("Couldn't get usb voltage rc=%d\n", rc);
+			goto skip_detect;
+		}
+		vbus_now = val.intval;
+		if (vbus_now < MICRO_5V) {
+			pr_err("vbus is %d, should be 9V\n", vbus_now);
+			goto skip_detect;
+		}
+
+		/* if battery temp is high or low, skip detect */
+		rc = smblib_get_prop_batt_temp(chg, &val);
+		if (rc < 0) {
+			pr_err("%s, failed to get batt_temp\n", __func__);
+			val.intval = 0;
+		} else
+			batt_temp = val.intval / 10;
+		if (batt_temp > 45 || batt_temp < 10) {
+			chg->qc3_max_power = QC3_MAX_POWER_M;
+			goto skip_detect;
+		}
+
+		/* if battery voltage is high, limit FCC */
+		rc = smblib_get_prop_batt_voltage_now(chg, &val);
+		if (rc < 0) {
+			pr_err("%s, failed to get batt_voltage_now\n", __func__);
+			val.intval = 0;
+		} else
+			batt_voltage = val.intval / 1000;
+		if (batt_voltage > 4200) {
+			force_fcc = QC3_DETECT_POWER_STEP_FCC;
+		} else {
+			force_fcc = QC3_DETECT_POWER_FCC;
+		}
+
+		smblib_dbg(chg, PR_MISC, "vote_force_active to %d\n", force_fcc);
+		vote_force_active(chg->fcc_votable, true, force_fcc);
 
 		/* Calculate R using V and I */
 		do {
 			try_times++;
+			smblib_dbg(chg, PR_MISC, "Calculate R_cal %d times\n", try_times);
 			vote(chg->usb_icl_votable, SW_ICL_MAX_VOTER, true, QC3_DETECT_R_LOW_ICL);
-			msleep(20);
+			msleep(50);
 			rc = smblib_get_prop_usb_voltage_now(chg, &val);
 			if (rc < 0)
 				pr_err("Couldn't get usb voltage rc=%d\n", rc);
@@ -5212,11 +5256,13 @@ static void smblib_raise_qc3_vbus_work(struct work_struct *work)
 			if (rc < 0)
 				pr_err("Couldn't get usb current rc=%d\n", rc);
 			icl_pre = val.intval;
-			if (icl_pre < QC3_DETECT_R_LOW_ICL - 100000)
+			if (icl_pre < QC3_DETECT_R_LOW_ICL - 100000) {
+				pr_info("vbus_pre is %d, icl_pre is %d, continue\n", vbus_pre, icl_pre);
 				continue;
+			}
 
 			vote(chg->usb_icl_votable, SW_ICL_MAX_VOTER, true, QC3_DETECT_R_HIGH_ICL);
-			msleep(20);
+			msleep(50);
 			rc = smblib_get_prop_usb_voltage_now(chg, &val);
 			if (rc < 0)
 				pr_err("Couldn't get usb voltage rc=%d\n", rc);
@@ -5225,6 +5271,10 @@ static void smblib_raise_qc3_vbus_work(struct work_struct *work)
 			if (rc < 0)
 				pr_err("Couldn't get usb current rc=%d\n", rc);
 			icl_now = val.intval;
+			if (icl_now < QC3_DETECT_R_HIGH_ICL - 100000) {
+				pr_info("vbus_now is %d, icl_now is %d, continue\n", vbus_now, icl_now);
+				continue;
+			}
 			pr_info("vbus_now is %d, vbus_pre is %d\n", vbus_now, vbus_pre);
 			pr_info("icl_now is %d, icl_pre is %d\n", icl_now, icl_pre);
 			R_cal = 1000 * (vbus_pre - vbus_now) / (icl_now - icl_pre);
@@ -5240,10 +5290,22 @@ static void smblib_raise_qc3_vbus_work(struct work_struct *work)
 
 try_again:
 		try_times++;
+		icl_detect = QC3_ICL_DETECT_START_ICL;
+		vote(chg->usb_icl_votable, SW_ICL_MAX_VOTER, true, icl_detect);
+		msleep(50);
+		rc = smblib_get_prop_usb_voltage_now(chg, &val);
+		if (rc < 0)
+			pr_err("Couldn't get usb voltage rc=%d\n", rc);
+		vbus_now = val.intval;
+		rc = smblib_get_prop_usb_current_now(chg, &val);
+		if (rc < 0)
+			pr_err("Couldn't get usb current rc=%d\n", rc);
+		icl_now = val.intval;
+
 		do {
-			icl_detect += 100000;
+			icl_detect += icl_delta;
 			vote(chg->usb_icl_votable, SW_ICL_MAX_VOTER, true, icl_detect);
-			msleep(20);
+			msleep(50);
 
 			vbus_pre = vbus_now;
 			icl_pre = icl_now;
@@ -5257,22 +5319,37 @@ try_again:
 				pr_err("Couldn't get usb current rc=%d\n", rc);
 			icl_now = val.intval;
 			pr_info("vbus_now is %d, icl_detect is %d, icl_now is %d\n", vbus_now, icl_detect, icl_now);
-			if (vbus_pre - vbus_now - (icl_now - icl_pre) * R_cal / 1000 > 100000)
+			if (vbus_now < QC3_BASE_VOL_MV * 1000 || icl_now < icl_pre
+					|| vbus_pre - vbus_now - (icl_now - icl_pre) * R_cal / 1000 > 50000)
 				break;
-			msleep(80);
-		} while ((icl_now - icl_pre) > 50000 && icl_detect < 3000000);
-		/* icl_now should not little than icl_pre */
-		if (icl_now < icl_pre && try_times < 3)
+			msleep(50);
+		} while ((icl_now - icl_pre) > (icl_delta / 2) && icl_detect < QC3_ICL_DETECT_END_ICL);
+		/* icl_now should not little than icl_pre
+		* but sometimes icl_now is a little small than icl_pre, consider a delta
+		* if vbus < 5V, means max power detected */
+		if (vbus_now > MICRO_5V && (icl_now + icl_delta) < icl_pre && try_times < 3)
 			goto try_again;
-		vote_force_active(chg->fcc_votable, false, 0);
-		icl_detect -= 200000;
+
+		icl_detect -= icl_delta;
 		chg->qc3_max_power = 1l * (vbus_pre / 1000) * icl_detect;
+		/* if calculated max power is lower than 18W, we should be careful
+		 * and try to do detect flow again */
+		if (chg->qc3_max_power < QC3_MAX_POWER_M && !weak_adapter_recheck) {
+			smblib_dbg(chg, PR_MISC, "chg->qc3_max_power is %ld, too low to detect again.\n",
+						chg->qc3_max_power);
+			weak_adapter_recheck = true;
+			goto try_again;
+		}
 
 		smblib_dbg(chg, PR_MISC, "chg->qc3_max_power is %ld\n", chg->qc3_max_power);
+
+		smblib_dbg(chg, PR_MISC, "vote_force_active to false\n");
+		vote_force_active(chg->fcc_votable, false, 0);
 		rc = smblib_force_vbus_voltage(chg, FORCE_5V_BIT);
 		if (rc < 0)
 			pr_err("Failed to force 5V\n");
 
+skip_detect:
 		/* select charge pump as second charger */
 		rc = smblib_select_sec_charger(chg, POWER_SUPPLY_CHARGER_SEC_CP,
 						POWER_SUPPLY_CP_HVDCP3, false);
@@ -7170,6 +7247,7 @@ static void smblib_batt_select_fcc_work(struct work_struct *work)
 }
 #define WLS_PROTECT_ICL_LEVEL 95
 #define WLS_5V 5000000
+#define WLS_5V_H 5500000
 #define WLS_9V 9000000
 #define WLS_11V 11000000
 #define WLS_12V 12000000
@@ -7308,7 +7386,7 @@ int smblib_wls_select_voltage(struct smb_charger *chg)
 		smblib_wls_power_enable(chg, true);
 	}
 
-	if (chg->wireless_vout_max == WLS_5V) {
+	if (chg->wireless_vout_max == WLS_5V_H) {
 		power_supply_get_property(chg->wls_psy,
 				POWER_SUPPLY_PROP_VOLTAGE_MAX, &val);
 		chg->wireless_vout_max = val.intval;
@@ -7319,7 +7397,7 @@ int smblib_wls_select_voltage(struct smb_charger *chg)
 
 	if (screen_on || chg->batt_capacity >= WLS_PROTECT_ICL_LEVEL) {
 		/* force set to 5V when screen on or battery is above 95% */
-		wls_vout.intval = WLS_5V;
+		wls_vout.intval = WLS_5V_H;
 	} else {
 		if (fcc >= WLS_POWER_15W_FCC
 			&& chg->batt_temp < WLS_TEMP_GOOD
@@ -7330,7 +7408,7 @@ int smblib_wls_select_voltage(struct smb_charger *chg)
 			&& chg->wireless_vout_max >= WLS_9V) {
 			wls_vout.intval = WLS_9V;
 		} else {
-			wls_vout.intval = WLS_5V;
+			wls_vout.intval = WLS_5V_H;
 		}
 	}
 
