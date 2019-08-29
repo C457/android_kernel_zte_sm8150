@@ -19,6 +19,7 @@
 #include <linux/of_address.h>
 #include <linux/alarmtimer.h>
 #include <linux/proc_fs.h>
+#include <linux/wakelock.h>
 #include "idt_p922x_wls_power.h"
 
 static int p922x_debug_mask = 0xff;
@@ -88,6 +89,7 @@ struct p922x_dev {
 	struct delayed_work  get_tx_adapter_work;
 	struct delayed_work  e_trans_show_work;
 	struct delayed_work  fop_check_work;
+	struct wake_lock	p922x_wake_lock;
 	struct power_supply *idtp922x_psy;
 	struct notifier_block	nb;
 	int tx_fw_version;
@@ -440,27 +442,32 @@ void p922x_get_tx_atapter_type(struct p922x_dev *chip)
 }
 
 #define V5P 5000
+#define V5P_H 5500
 #define V9P 9000
 #define V12P 12000
 #define WLS_5V 5000000
+#define WLS_5V_H 5500000
 #define WLS_9V 9000000
 #define WLS_12V 12000000
-#define WLS_DEF_VOL WLS_5V
+#define WLS_DEF_VOL WLS_5V_H
 #define WLS_0P25A 250000
 #define WLS_0P50A 500000
 #define WLS_0P75A 750000
+#define WLS_0P90A 900000
 #define WLS_1A	   1000000
 #define WLS_1P1A   1100000
 #define WLS_1P25A 1000000
 #define WLS_2P0A 2000000
 
-#define WLS_DEF_CUR WLS_1A
+#define WLS_DEF_CUR WLS_0P90A
 
 int p922x_get_rx_output_voltage_max(struct p922x_dev *chip)
 {
 	int wls_voltage = WLS_DEF_VOL;
 
-	if (chip->idt_adapter_type <= ADAPTER_DCP) {
+	if (chip->idt_adapter_type == ADAPTER_UNKNOWN) {
+		wls_voltage = WLS_5V_H;
+	} else if (chip->idt_adapter_type <= ADAPTER_DCP) {
 		wls_voltage = WLS_5V;
 	} else if (chip->idt_adapter_type == ADAPTER_QC20) {
 		wls_voltage = WLS_9V;
@@ -514,7 +521,7 @@ static int p922x_fod_parameters_check(struct p922x_dev *chip, ushort mv)
 
 	chip->bus.read_buf(chip, REG_FOD_START_ADDR, val, FOD_REGSTERS_NUM);
 	for (i = 0; i < FOD_REGSTERS_NUM; i++) {
-		if (mv == V5P) {
+		if (mv == V5P_H || mv == V5P) {
 			if (val[i] != idtp9220_rx_fod_5v[i]) {
 				p922x_dbg(chip, PR_INTERRUPT, "fod 5v parameters is wrong\n");
 				rc = -EINVAL;
@@ -544,7 +551,7 @@ static int p922x_update_fod(struct p922x_dev *chip, ushort mv)
 	int tries = 0;
 
 	for (tries = 0; tries < TRY_MAX; tries++) {
-		if (mv == V5P) {
+		if (mv == V5P_H || mv == V5P) {
 			chip->bus.write_buf(chip, REG_FOD_START_ADDR,
 				(u8 *)idtp9220_rx_fod_5v, FOD_REGSTERS_NUM);
 		} else if (mv == V9P) {
@@ -618,6 +625,7 @@ void p922x_set_fast_charging_voltage(struct p922x_dev *chip, ushort mv)
 	if (vout_now > 11000 && mv == V12P)
 		return;
 
+	wake_lock(&chip->p922x_wake_lock);
 	if ((chip->per_voltage != 0) && (mv != chip->per_voltage)) {
 		p922x_dbg(chip, PR_DEBUG, "%dmV --->>> %dmV\n", chip->per_voltage, mv);
 		p922x_switch_voltage_handler(true);
@@ -627,27 +635,35 @@ void p922x_set_fast_charging_voltage(struct p922x_dev *chip, ushort mv)
 	chip->per_voltage = mv;
 
 	if (vout_now < 11000 && mv == V12P) {
+		p922x_dbg(chip, PR_DEBUG, "raise to 12V, first set 9V\n");
 		/* check wls power vout, if below 11V, set to 12V again, otherwise need not change */
 		val = V9P;
 		chip->bus.write_buf(chip, REG_FC_VOLTAGE, (u8 *)&val, 2);
 		chip->bus.write(chip, REG_COMMAND, VSWITCH);
 		msleep(3000);
-		chip->bus.write_buf(chip, REG_FC_VOLTAGE, (u8 *)&mv, 2);
+		p922x_dbg(chip, PR_DEBUG, "raise to 12V, second set 12V\n");
+		val = V12P;
+		chip->bus.write_buf(chip, REG_FC_VOLTAGE, (u8 *)&val, 2);
 		chip->bus.write(chip, REG_COMMAND, VSWITCH);
 		/* set 12V twice */
+		p922x_dbg(chip, PR_DEBUG, "raise to 12V, second set 12V twice\n");
 		msleep(20);
-		chip->bus.write_buf(chip, REG_FC_VOLTAGE, (u8 *)&mv, 2);
+		chip->bus.write_buf(chip, REG_FC_VOLTAGE, (u8 *)&val, 2);
 		chip->bus.write(chip, REG_COMMAND, VSWITCH);
-	} else if (vout_now > 11000 && mv == V5P) {
+	} else if (vout_now > 11000 && mv == V5P_H) {
+		p922x_dbg(chip, PR_DEBUG, "down to 5V, first set 9V\n");
 		val = V9P;
 		chip->bus.write_buf(chip, REG_FC_VOLTAGE, (u8 *)&val, 2);
 		chip->bus.write(chip, REG_COMMAND, VSWITCH);
 		msleep(3000);
-		chip->bus.write_buf(chip, REG_FC_VOLTAGE, (u8 *)&mv, 2);
+		p922x_dbg(chip, PR_DEBUG, "down to 5V, second set 5V\n");
+		val = V5P;
+		chip->bus.write_buf(chip, REG_FC_VOLTAGE, (u8 *)&val, 2);
 		chip->bus.write(chip, REG_COMMAND, VSWITCH);
-
 	} else {
-		chip->bus.write_buf(chip, REG_FC_VOLTAGE, (u8 *)&mv, 2);
+		p922x_dbg(chip, PR_DEBUG, "set to %dV, first set\n", mv);
+		val = mv;
+		chip->bus.write_buf(chip, REG_FC_VOLTAGE, (u8 *)&val, 2);
 		chip->bus.write(chip, REG_COMMAND, VSWITCH);
 	}
 
@@ -656,6 +672,7 @@ void p922x_set_fast_charging_voltage(struct p922x_dev *chip, ushort mv)
 	p922x_update_fod(chip, mv);
 
 	p922x_switch_voltage_handler(false);
+	wake_unlock(&chip->p922x_wake_lock);
 }
 
 void p922x_toggle_ldo(struct p922x_dev *chip)
@@ -1969,9 +1986,11 @@ static irqreturn_t p922x_power_good_handler(int irq, void *dev_id)
 		chip->status_good = false;
 		wireless_charging_signal_good = 0;
 	} else {
-		if (p922x_update_fod(chip, V5P)) {
+		if (p922x_update_fod(chip, V5P_H)) {
 			p922x_dbg(chip, PR_INTERRUPT, "set fod 5v fail.\n");
 		}
+		/* by default, set 5.5V voltage */
+		chip->bus.write(chip, REG_VOUT_SET, V5P_H/100 - 35);
 		schedule_delayed_work(&chip->e_trans_show_work, msecs_to_jiffies(1000));
 	}
 	return IRQ_HANDLED;
@@ -2912,6 +2931,7 @@ static int p922x_probe(struct i2c_client *client, const struct i2c_device_id *id
 	INIT_DELAYED_WORK(&chip->e_trans_show_work, e_trans_work);
 	INIT_DELAYED_WORK(&chip->device_key_auth_work, key_auth_work);
 	INIT_DELAYED_WORK(&chip->fop_check_work, p922x_fop_check_work);
+	wake_lock_init(&chip->p922x_wake_lock, WAKE_LOCK_SUSPEND, "idt_chg_event");
 
 	chip->debug_root = debugfs_create_dir("p922x", NULL);
 	if (!chip->debug_root)
