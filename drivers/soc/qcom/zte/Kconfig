@@ -14,4 +14,10 @@ config MACH_ZTE_PINE
 	help
 	  Support for ZTE Axon 10 Pro (pine)
 
+config MACH_ZTE_POAD
+	bool "Poad board"
+	select MACH_ZTE
+	help
+	  Support for ZTE Axon 10 Pro 5G (poad)
+
 endmenu
