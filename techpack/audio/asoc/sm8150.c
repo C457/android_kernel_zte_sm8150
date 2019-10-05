@@ -171,6 +171,9 @@ struct msm_asoc_mach_data {
 	struct snd_info_entry *codec_root;
 	struct msm_pinctrl_info pinctrl_info;
 	struct device_node *us_euro_gpio_p; /* used by pinctrl API */
+#if 0
+	struct device_node *rcv_sw_gpio; /* used by pinctrl API */
+#endif
 	struct device_node *hph_en1_gpio_p; /* used by pinctrl API */
 	struct device_node *hph_en0_gpio_p; /* used by pinctrl API */
 	struct device_node *fsa_handle;
@@ -612,6 +615,9 @@ static SOC_ENUM_SINGLE_EXT_DECL(hifi_function, hifi_text);
 static struct platform_device *spdev;
 
 static int msm_hifi_control;
+#if 0
+static int rcv_sw_control = 0;
+#endif
 static bool is_initial_boot;
 static bool codec_reg_done;
 static struct snd_soc_aux_dev *msm_aux_dev;
@@ -634,10 +640,17 @@ static struct wcd_mbhc_config wcd_mbhc_cfg = {
 	.mono_stero_detection = false,
 	.swap_gnd_mic = NULL,
 	.hs_ext_micbias = true,
+#if 1
+	.key_code[0] = KEY_MEDIA,
+	.key_code[1] = KEY_VOLUMEUP,
+	.key_code[2] = KEY_VOLUMEDOWN,
+	.key_code[3] = 0,
+#else
 	.key_code[0] = KEY_MEDIA,
 	.key_code[1] = KEY_VOICECOMMAND,
 	.key_code[2] = KEY_VOLUMEUP,
 	.key_code[3] = KEY_VOLUMEDOWN,
+#endif
 	.key_code[4] = 0,
 	.key_code[5] = 0,
 	.key_code[6] = 0,
@@ -2317,6 +2330,7 @@ static int tdm_tx_ch_put(struct snd_kcontrol *kcontrol,
 	return ret;
 }
 
+#if 0
 static int tdm_slot_map_put(struct snd_kcontrol *kcontrol,
 			struct snd_ctl_elem_value *ucontrol)
 {
@@ -2353,6 +2367,7 @@ static int tdm_slot_map_put(struct snd_kcontrol *kcontrol,
 
 	return 0;
 }
+#endif
 
 static int aux_pcm_get_port_idx(struct snd_kcontrol *kcontrol)
 {
@@ -2899,6 +2914,54 @@ static int msm_aux_pcm_tx_format_put(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+#if 0
+static int rcv_sw_control_get(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	pr_debug("%s: rcv_sw_control = %d\n",
+			 __func__, rcv_sw_control);
+ 
+	ucontrol->value.enumerated.item[0] = rcv_sw_control;
+ 
+	return 0;
+}
+
+static int rcv_sw_control_put(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_codec *codec = snd_soc_kcontrol_codec(kcontrol);
+	struct snd_soc_card *card = codec->component.card;
+	struct msm_asoc_mach_data *pdata =
+				snd_soc_card_get_drvdata(card);
+	int status = ucontrol->value.integer.value[0];
+	int ret;
+
+	pr_err("%s(): status=%d\n", __func__, status);
+
+	if (!pdata || !pdata->rcv_sw_gpio) {
+		dev_err(codec->dev, "%s: rcv_sw_gpio is invalid\n", __func__);
+		return -EINVAL;
+	}
+	if (status) {
+		ret = msm_cdc_pinctrl_select_active_state(pdata->rcv_sw_gpio);
+		if (ret < 0) {
+	        pr_err("%s(): rcv_sw_gpio direction failed %d\n",
+				__func__, ret);
+		return ret;
+		}
+	} else {
+		ret = msm_cdc_pinctrl_select_sleep_state(pdata->rcv_sw_gpio);
+		if (ret < 0) {
+		pr_err("%s(): rcv_sw_gpio direction failed %d\n",
+			__func__, ret);
+		return ret;
+		}
+	}
+	rcv_sw_control = status;
+	return 0;
+}
+#endif
+
 static int msm_hifi_ctrl(struct snd_soc_codec *codec)
 {
 	struct snd_soc_dapm_context *dapm = snd_soc_codec_get_dapm(codec);
@@ -3235,9 +3298,12 @@ static const struct snd_kcontrol_new msm_snd_controls[] = {
 			msm_aux_pcm_tx_format_get, msm_aux_pcm_tx_format_put),
 	SOC_ENUM_EXT("HiFi Function", hifi_function, msm_hifi_get,
 			msm_hifi_put),
+#if 0
 	SOC_SINGLE_MULTI_EXT("TDM Slot Map", SND_SOC_NOPM, 0, 255, 0, 4,
 	NULL, tdm_slot_map_put),
-
+	SOC_ENUM_EXT("Receiver Switch", hifi_function, rcv_sw_control_get,
+			rcv_sw_control_put),
+#endif
 };
 
 static int msm_snd_enable_codec_ext_clk(struct snd_soc_codec *codec,
@@ -4730,6 +4796,7 @@ static int msm_get_pinctrl(struct platform_device *pdev)
 		pr_err("%s: could not get mi2s_active pinstate\n", __func__);
 		goto err;
 	}
+#if 0
 	pinctrl_info->tdm_disable = pinctrl_lookup_state(pinctrl,
 						"quat_tdm_disable");
 	if (IS_ERR(pinctrl_info->tdm_disable)) {
@@ -4743,6 +4810,7 @@ static int msm_get_pinctrl(struct platform_device *pdev)
 			__func__);
 		goto err;
 	}
+#endif
 	/* Reset the TLMM pins to a default state */
 	ret = pinctrl_select_state(pinctrl_info->pinctrl,
 					pinctrl_info->mi2s_disable);
@@ -5866,6 +5934,22 @@ static struct snd_soc_dai_link msm_common_misc_fe_dai_links[] = {
 		.ignore_pmdown_time = 1,
 		.id = MSM_FRONTEND_DAI_MULTIMEDIA31,
 	},
+	{
+		.name = "QUAT_MI2S Hostless",
+		.stream_name = "QUAT_MI2S Hostless",
+		.cpu_dai_name = "QUAT_MI2S_RX_HOSTLESS",
+		.platform_name = "msm-pcm-hostless",
+		.dynamic = 1,
+		.dpcm_playback = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			    SND_SOC_DPCM_TRIGGER_POST},
+		.no_host_mode = SND_SOC_DAI_LINK_NO_HOST,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+		.codec_dai_name = "snd-soc-dummy-dai",
+		.codec_name = "snd-soc-dummy",
+		.id = MSM_FRONTEND_DAI_MULTIMEDIA1,
+	},
 };
 
 static struct snd_soc_dai_link msm_common_be_dai_links[] = {
@@ -6575,6 +6659,19 @@ static struct snd_soc_dai_link ext_disp_be_dai_link[] = {
 	},
 };
 
+static struct snd_soc_dai_link_component tfa98xx_dai_link_component[]=
+{
+	{
+		.name= "tfa98xx.8-0034",
+		.dai_name="tfa98xx-aif-8-34",
+	},
+
+	{
+		.name= "tfa98xx.8-0035",
+		.dai_name="tfa98xx-aif-8-35",
+	},
+};
+
 static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 	{
 		.name = LPASS_BE_PRI_MI2S_RX,
@@ -6668,8 +6765,8 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.stream_name = "Quaternary MI2S Playback",
 		.cpu_dai_name = "msm-dai-q6-mi2s.3",
 		.platform_name = "msm-pcm-routing",
-		.codec_name = "msm-stub-codec.1",
-		.codec_dai_name = "msm-stub-rx",
+		.codecs = tfa98xx_dai_link_component,
+		.num_codecs = ARRAY_SIZE(tfa98xx_dai_link_component),
 		.no_pcm = 1,
 		.dpcm_playback = 1,
 		.id = MSM_BACKEND_DAI_QUATERNARY_MI2S_RX,
@@ -6683,8 +6780,8 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.stream_name = "Quaternary MI2S Capture",
 		.cpu_dai_name = "msm-dai-q6-mi2s.3",
 		.platform_name = "msm-pcm-routing",
-		.codec_name = "msm-stub-codec.1",
-		.codec_dai_name = "msm-stub-tx",
+		.codecs = tfa98xx_dai_link_component,
+		.num_codecs = ARRAY_SIZE(tfa98xx_dai_link_component),
 		.no_pcm = 1,
 		.dpcm_capture = 1,
 		.id = MSM_BACKEND_DAI_QUATERNARY_MI2S_TX,
@@ -7636,9 +7733,13 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 		ret = -EPROBE_DEFER;
 		goto err;
 	}
+
+	if (!of_property_read_bool(pdev->dev.of_node, "qcom,wsa-disable")) {
 	ret = msm_init_wsa_dev(pdev, card);
 	if (ret)
+		dev_err(&pdev->dev, "init wsa ret %d\n", ret);
 		goto err;
+	}
 
 	ret = devm_snd_soc_register_card(&pdev->dev, card);
 	if (ret == -EPROBE_DEFER) {
@@ -7676,6 +7777,23 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 				pdev->dev.of_node->full_name);
 		}
 	}
+
+#if 0
+	pdata->rcv_sw_gpio = of_parse_phandle(pdev->dev.of_node,
+				"qcom,rcv-sw-gpio", 0);
+	if (!pdata->rcv_sw_gpio) {
+		dev_err(&pdev->dev, "property %s not detected in node %s\n",
+			"rcv_sw_gpio", pdev->dev.of_node->full_name);
+	} else {
+		ret = msm_cdc_pinctrl_get_state(pdata->rcv_sw_gpio);
+		if (ret) {
+			dev_err(&pdev->dev,
+				"%s: rcv_sw_gpio request failed, ret:%d\n",
+				__func__, ret);
+		}
+		msm_cdc_pinctrl_select_sleep_state(pdata->rcv_sw_gpio);
+	}
+#endif
 
 	ret = of_property_read_string(pdev->dev.of_node,
 		"qcom,mbhc-audio-jack-type", &mbhc_audio_jack_type);
