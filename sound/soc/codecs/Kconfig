@@ -1182,6 +1182,4 @@ config ZTE_NO_INTEGRATED_CODEC
 
 source "sound/soc/codecs/tfa9890/Kconfig"
 
-source "sound/soc/codecs/tfa9894/Kconfig"
-
 endmenu
