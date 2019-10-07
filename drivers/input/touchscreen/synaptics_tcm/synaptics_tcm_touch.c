@@ -734,9 +734,9 @@ static void touch_report(void)
 	if (tcm_hcd->in_wakeup_gesture &&
 			touch_data->gesture_id == GESTURE_DOUBLE_TAP && tcm_hcd->in_suspend) {
 		pr_notice("synapti: double tap gesture\n");
-		input_report_key(touch_hcd->input_dev, KEY_GESTURE_DOUBLEC, 1);
+		input_report_key(touch_hcd->input_dev, KEY_WAKEUP, 1);
 		input_sync(touch_hcd->input_dev);
-		input_report_key(touch_hcd->input_dev, KEY_GESTURE_DOUBLEC, 0);
+		input_report_key(touch_hcd->input_dev, KEY_WAKEUP, 0);
 		input_sync(touch_hcd->input_dev);
 	}
 #endif
@@ -1018,7 +1018,8 @@ static int touch_set_input_dev(void)
 
 #ifdef WAKEUP_GESTURE
 	set_bit(KEY_GESTURE_DOUBLEC, touch_hcd->input_dev->keybit);
-	input_set_capability(touch_hcd->input_dev, EV_KEY, KEY_GESTURE_DOUBLEC);
+	set_bit(KEY_WAKEUP, touch_hcd->input_dev->keybit);
+	input_set_capability(touch_hcd->input_dev, EV_KEY, KEY_WAKEUP);
 /*	set_bit(KEY_AOD_AREAMEET_DOWN, touch_hcd->input_dev->keybit);*/
 #endif
 
