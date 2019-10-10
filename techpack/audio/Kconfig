@@ -148,3 +148,5 @@ config WCD_DSP_GLINK
 	tristate "WCD_DSP_GLINK"
 config WSA_MACRO
 	tristate "WSA_MACRO"
+config ZTE_FEATURE_NXP9894_SMART_PA
+	tristate "ZTE_FEATURE_NXP9894_SMART_PA"
