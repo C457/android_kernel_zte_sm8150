@@ -72,6 +72,10 @@
 #define MSM_LL_QOS_VALUE 300 /* time in us to ensure LPM doesn't go in C3/C4 */
 #define MSM_HIFI_ON 1
 
+/* ZTE_chenjun */
+#ifdef CONFIG_ZTE_FEATURE_NXP9894_SMART_PA
+#define ZTE_MBHC_CAL
+#endif
 #define TDM_MAX_SLOTS		8
 #define TDM_SLOT_WIDTH_BITS	32
 
@@ -171,14 +175,14 @@ struct msm_asoc_mach_data {
 	struct snd_info_entry *codec_root;
 	struct msm_pinctrl_info pinctrl_info;
 	struct device_node *us_euro_gpio_p; /* used by pinctrl API */
-#if 0
-	struct device_node *rcv_sw_gpio; /* used by pinctrl API */
-#endif
 	struct device_node *hph_en1_gpio_p; /* used by pinctrl API */
 	struct device_node *hph_en0_gpio_p; /* used by pinctrl API */
 	struct device_node *fsa_handle;
 	struct snd_soc_codec *codec;
 	struct work_struct adsp_power_up_work;
+#ifdef CONFIG_ZTE_FEATURE_NXP9894_SMART_PA
+	int rcv_sw_gpio; /* ZTE_chenjun */
+#endif
 };
 
 struct msm_asoc_wcd93xx_codec {
@@ -615,9 +619,11 @@ static SOC_ENUM_SINGLE_EXT_DECL(hifi_function, hifi_text);
 static struct platform_device *spdev;
 
 static int msm_hifi_control;
-#if 0
-static int rcv_sw_control = 0;
+/* ZTE_chenjun: Start */
+#ifdef CONFIG_ZTE_FEATURE_NXP9894_SMART_PA
+static int rcv_sw_control = 1;
 #endif
+/* ZTE_chenjun: End */
 static bool is_initial_boot;
 static bool codec_reg_done;
 static struct snd_soc_aux_dev *msm_aux_dev;
@@ -640,7 +646,7 @@ static struct wcd_mbhc_config wcd_mbhc_cfg = {
 	.mono_stero_detection = false,
 	.swap_gnd_mic = NULL,
 	.hs_ext_micbias = true,
-#if 1
+#ifdef ZTE_MBHC_CAL
 	.key_code[0] = KEY_MEDIA,
 	.key_code[1] = KEY_VOLUMEUP,
 	.key_code[2] = KEY_VOLUMEDOWN,
@@ -2330,7 +2336,8 @@ static int tdm_tx_ch_put(struct snd_kcontrol *kcontrol,
 	return ret;
 }
 
-#if 0
+/* ZTE_chenjun */
+#ifdef ENABLE_TDM_FEATURE
 static int tdm_slot_map_put(struct snd_kcontrol *kcontrol,
 			struct snd_ctl_elem_value *ucontrol)
 {
@@ -2914,54 +2921,6 @@ static int msm_aux_pcm_tx_format_put(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
-#if 0
-static int rcv_sw_control_get(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	pr_debug("%s: rcv_sw_control = %d\n",
-			 __func__, rcv_sw_control);
- 
-	ucontrol->value.enumerated.item[0] = rcv_sw_control;
- 
-	return 0;
-}
-
-static int rcv_sw_control_put(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	struct snd_soc_codec *codec = snd_soc_kcontrol_codec(kcontrol);
-	struct snd_soc_card *card = codec->component.card;
-	struct msm_asoc_mach_data *pdata =
-				snd_soc_card_get_drvdata(card);
-	int status = ucontrol->value.integer.value[0];
-	int ret;
-
-	pr_err("%s(): status=%d\n", __func__, status);
-
-	if (!pdata || !pdata->rcv_sw_gpio) {
-		dev_err(codec->dev, "%s: rcv_sw_gpio is invalid\n", __func__);
-		return -EINVAL;
-	}
-	if (status) {
-		ret = msm_cdc_pinctrl_select_active_state(pdata->rcv_sw_gpio);
-		if (ret < 0) {
-	        pr_err("%s(): rcv_sw_gpio direction failed %d\n",
-				__func__, ret);
-		return ret;
-		}
-	} else {
-		ret = msm_cdc_pinctrl_select_sleep_state(pdata->rcv_sw_gpio);
-		if (ret < 0) {
-		pr_err("%s(): rcv_sw_gpio direction failed %d\n",
-			__func__, ret);
-		return ret;
-		}
-	}
-	rcv_sw_control = status;
-	return 0;
-}
-#endif
-
 static int msm_hifi_ctrl(struct snd_soc_codec *codec)
 {
 	struct snd_soc_dapm_context *dapm = snd_soc_codec_get_dapm(codec);
@@ -3011,6 +2970,58 @@ static int msm_hifi_put(struct snd_kcontrol *kcontrol,
 
 	return 0;
 }
+
+/* ZTE_chenjun: Start */
+#ifdef CONFIG_ZTE_FEATURE_NXP9894_SMART_PA
+static int rcv_sw_control_get(struct snd_kcontrol *kcontrol,
+			      struct snd_ctl_elem_value *ucontrol)
+{
+	pr_debug("%s: rcv_sw_control = %d\n",
+			 __func__, rcv_sw_control);
+	ucontrol->value.enumerated.item[0] = rcv_sw_control;
+
+	return 0;
+}
+
+static int rcv_sw_control_put(struct snd_kcontrol *kcontrol,
+			      struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_codec *codec = snd_soc_kcontrol_codec(kcontrol);
+	struct snd_soc_card *card = codec->component.card;
+	struct msm_asoc_mach_data *pdata =
+				snd_soc_card_get_drvdata(card);
+	int status = ucontrol->value.integer.value[0];
+	int ret;
+
+	pr_debug("%s(): status=%d\n", __func__, status);
+
+	if (pdata->rcv_sw_gpio < 0) {
+		pr_err("%s: rcv_sw_gpio %d is invalid\n",
+			__func__, pdata->rcv_sw_gpio);
+		return -EINVAL;
+	}
+
+	if (status) {
+		ret = gpio_direction_output(pdata->rcv_sw_gpio, 1);
+		if (ret < 0) {
+			pr_err("%s(): rcv_sw_gpio direction failed %d\n",
+				__func__, ret);
+			return ret;
+		}
+	} else {
+		ret = gpio_direction_output(pdata->rcv_sw_gpio, 0);
+		if (ret < 0) {
+			pr_err("%s(): rcv_sw_gpio direction failed %d\n",
+				__func__, ret);
+			return ret;
+		}
+	}
+	rcv_sw_control = status;
+
+	return 0;
+}
+#endif
+/* ZTE_chenjun: End */
 
 static const struct snd_kcontrol_new msm_snd_controls[] = {
 	SOC_ENUM_EXT("SLIM_0_RX Channels", slim_0_rx_chs,
@@ -3298,12 +3309,16 @@ static const struct snd_kcontrol_new msm_snd_controls[] = {
 			msm_aux_pcm_tx_format_get, msm_aux_pcm_tx_format_put),
 	SOC_ENUM_EXT("HiFi Function", hifi_function, msm_hifi_get,
 			msm_hifi_put),
-#if 0
+#ifdef ENABLE_TDM_FEATURE
 	SOC_SINGLE_MULTI_EXT("TDM Slot Map", SND_SOC_NOPM, 0, 255, 0, 4,
 	NULL, tdm_slot_map_put),
+#endif
+/* ZTE_chenjun: Start */
+#ifdef CONFIG_ZTE_FEATURE_NXP9894_SMART_PA
 	SOC_ENUM_EXT("Receiver Switch", hifi_function, rcv_sw_control_get,
 			rcv_sw_control_put),
 #endif
+/* ZTE_chenjun: End */
 };
 
 static int msm_snd_enable_codec_ext_clk(struct snd_soc_codec *codec,
@@ -3935,6 +3950,9 @@ static bool msm_usbc_swap_gnd_mic(struct snd_soc_codec *codec, bool active)
 	struct msm_asoc_mach_data *pdata =
 				snd_soc_card_get_drvdata(card);
 
+	/* ZTE_chenjun */
+	pr_debug("%s: active %d\n", __func__, active);
+
 	if (!pdata->fsa_handle)
 		return false;
 
@@ -4361,7 +4379,11 @@ static void *def_wcd_mbhc_cal(void)
 		return NULL;
 
 #define S(X, Y) ((WCD_MBHC_CAL_PLUG_TYPE_PTR(wcd_mbhc_cal)->X) = (Y))
+#ifdef ZTE_MBHC_CAL
+	S(v_hs_max, 1700);
+#else
 	S(v_hs_max, 1600);
+#endif
 #undef S
 #define S(X, Y) ((WCD_MBHC_CAL_BTN_DET_PTR(wcd_mbhc_cal)->X) = (Y))
 	S(num_btn, WCD_MBHC_DEF_BUTTONS);
@@ -4371,9 +4393,15 @@ static void *def_wcd_mbhc_cal(void)
 	btn_high = ((void *)&btn_cfg->_v_btn_low) +
 		(sizeof(btn_cfg->_v_btn_low[0]) * btn_cfg->num_btn);
 
+#ifdef ZTE_MBHC_CAL
+	btn_high[0] = 100;
+	btn_high[1] = 200;
+	btn_high[2] = 500;
+#else
 	btn_high[0] = 75;
 	btn_high[1] = 150;
 	btn_high[2] = 237;
+#endif
 	btn_high[3] = 500;
 	btn_high[4] = 500;
 	btn_high[5] = 500;
@@ -4796,7 +4824,9 @@ static int msm_get_pinctrl(struct platform_device *pdev)
 		pr_err("%s: could not get mi2s_active pinstate\n", __func__);
 		goto err;
 	}
-#if 0
+
+/* ZTE_chenjun */
+#ifdef ENABLE_TDM_FEATURE
 	pinctrl_info->tdm_disable = pinctrl_lookup_state(pinctrl,
 						"quat_tdm_disable");
 	if (IS_ERR(pinctrl_info->tdm_disable)) {
@@ -5186,6 +5216,20 @@ static struct snd_soc_ops msm_wcn_ops = {
 	.hw_params = msm_wcn_hw_params,
 };
 
+/* ZTE_chenjun: Start */
+#ifdef CONFIG_ZTE_FEATURE_NXP9894_SMART_PA
+static struct snd_soc_dai_link_component tfa98xx_dai_link_component[] = {
+	{
+		.name = "tfa98xx.8-0034",
+		.dai_name = "tfa98xx-aif-8-34",
+	},
+	{
+		.name = "tfa98xx.8-0035",
+		.dai_name = "tfa98xx-aif-8-35",
+	}
+};
+#endif
+/* ZTE_chenjun: End */
 
 /* Digital audio interface glue - connects codec <---> CPU */
 static struct snd_soc_dai_link msm_common_dai_links[] = {
@@ -5934,22 +5978,6 @@ static struct snd_soc_dai_link msm_common_misc_fe_dai_links[] = {
 		.ignore_pmdown_time = 1,
 		.id = MSM_FRONTEND_DAI_MULTIMEDIA31,
 	},
-	{
-		.name = "QUAT_MI2S Hostless",
-		.stream_name = "QUAT_MI2S Hostless",
-		.cpu_dai_name = "QUAT_MI2S_RX_HOSTLESS",
-		.platform_name = "msm-pcm-hostless",
-		.dynamic = 1,
-		.dpcm_playback = 1,
-		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
-			    SND_SOC_DPCM_TRIGGER_POST},
-		.no_host_mode = SND_SOC_DAI_LINK_NO_HOST,
-		.ignore_suspend = 1,
-		.ignore_pmdown_time = 1,
-		.codec_dai_name = "snd-soc-dummy-dai",
-		.codec_name = "snd-soc-dummy",
-		.id = MSM_FRONTEND_DAI_MULTIMEDIA1,
-	},
 };
 
 static struct snd_soc_dai_link msm_common_be_dai_links[] = {
@@ -6659,19 +6687,6 @@ static struct snd_soc_dai_link ext_disp_be_dai_link[] = {
 	},
 };
 
-static struct snd_soc_dai_link_component tfa98xx_dai_link_component[]=
-{
-	{
-		.name= "tfa98xx.8-0034",
-		.dai_name="tfa98xx-aif-8-34",
-	},
-
-	{
-		.name= "tfa98xx.8-0035",
-		.dai_name="tfa98xx-aif-8-35",
-	},
-};
-
 static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 	{
 		.name = LPASS_BE_PRI_MI2S_RX,
@@ -6765,8 +6780,13 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.stream_name = "Quaternary MI2S Playback",
 		.cpu_dai_name = "msm-dai-q6-mi2s.3",
 		.platform_name = "msm-pcm-routing",
+#ifdef CONFIG_ZTE_FEATURE_NXP9894_SMART_PA
 		.codecs = tfa98xx_dai_link_component,
 		.num_codecs = ARRAY_SIZE(tfa98xx_dai_link_component),
+#else
+		.codec_name = "msm-stub-codec.1",
+		.codec_dai_name = "msm-stub-rx",
+#endif
 		.no_pcm = 1,
 		.dpcm_playback = 1,
 		.id = MSM_BACKEND_DAI_QUATERNARY_MI2S_RX,
@@ -6780,8 +6800,8 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.stream_name = "Quaternary MI2S Capture",
 		.cpu_dai_name = "msm-dai-q6-mi2s.3",
 		.platform_name = "msm-pcm-routing",
-		.codecs = tfa98xx_dai_link_component,
-		.num_codecs = ARRAY_SIZE(tfa98xx_dai_link_component),
+		.codec_name = "msm-stub-codec.1",
+		.codec_dai_name = "msm-stub-tx",
 		.no_pcm = 1,
 		.dpcm_capture = 1,
 		.id = MSM_BACKEND_DAI_QUATERNARY_MI2S_TX,
@@ -6961,6 +6981,25 @@ static struct snd_soc_dai_link msm_auxpcm_be_dai_links[] = {
 		.be_hw_params_fixup = msm_be_hw_params_fixup,
 		.ignore_suspend = 1,
 	},
+/* ZTE add QUAT_MI2S for AFE LOOP Start */
+#ifdef CONFIG_ZTE_FEATURE_NXP9894_SMART_PA
+	{
+		.name = "QUAT_MI2S Hostless",
+		.stream_name = "QUAT_MI2S Hostless",
+		.cpu_dai_name = "QUAT_MI2S_RX_HOSTLESS",
+		.platform_name = "msm-pcm-hostless",
+		.dynamic = 1,
+		.dpcm_playback = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+	  			SND_SOC_DPCM_TRIGGER_POST},
+		.no_host_mode = SND_SOC_DAI_LINK_NO_HOST,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+		.codec_dai_name = "snd-soc-dummy-dai",
+		.codec_name = "snd-soc-dummy",
+	},
+#endif
+/* ZTE add QUAT_MI2S for AFE LOOP End */
 };
 
 static struct snd_soc_dai_link msm_pahu_snd_card_dai_links[
@@ -7741,6 +7780,25 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 		goto err;
 	}
 
+/* ZTE_chenjun */
+#ifdef CONFIG_ZTE_FEATURE_NXP9894_SMART_PA
+	pdata->rcv_sw_gpio = of_get_named_gpio(pdev->dev.of_node,
+					      "qcom,rcv-sw-gpio", 0);
+	if (pdata->rcv_sw_gpio < 0) {
+		dev_err(&pdev->dev, "%s: %s property not found %d\n",
+			__func__, "qcom,rcv-sw-gpio", pdata->rcv_sw_gpio);
+	} else {
+		ret = gpio_request(pdata->rcv_sw_gpio, "rcv_sw_gpio");
+		if (ret) {
+			dev_err(&pdev->dev,
+				"%s: rcv_sw_gpio request failed, ret:%d\n",
+				__func__, ret);
+		}
+		gpio_direction_output(pdata->rcv_sw_gpio, 0); /* 0: default is speaker mode */
+		rcv_sw_control = 0;
+	}
+#endif
+
 	ret = devm_snd_soc_register_card(&pdev->dev, card);
 	if (ret == -EPROBE_DEFER) {
 		if (codec_reg_done)
@@ -7777,23 +7835,6 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 				pdev->dev.of_node->full_name);
 		}
 	}
-
-#if 0
-	pdata->rcv_sw_gpio = of_parse_phandle(pdev->dev.of_node,
-				"qcom,rcv-sw-gpio", 0);
-	if (!pdata->rcv_sw_gpio) {
-		dev_err(&pdev->dev, "property %s not detected in node %s\n",
-			"rcv_sw_gpio", pdev->dev.of_node->full_name);
-	} else {
-		ret = msm_cdc_pinctrl_get_state(pdata->rcv_sw_gpio);
-		if (ret) {
-			dev_err(&pdev->dev,
-				"%s: rcv_sw_gpio request failed, ret:%d\n",
-				__func__, ret);
-		}
-		msm_cdc_pinctrl_select_sleep_state(pdata->rcv_sw_gpio);
-	}
-#endif
 
 	ret = of_property_read_string(pdev->dev.of_node,
 		"qcom,mbhc-audio-jack-type", &mbhc_audio_jack_type);

@@ -37,6 +37,13 @@
 void wcd_mbhc_jack_report(struct wcd_mbhc *mbhc,
 			  struct snd_soc_jack *jack, int status, int mask)
 {
+	/* ZTE_chenjun */
+	if (jack == &mbhc->headset_jack) {
+		pr_debug("%s: headset_jack status(%#X)\n", __func__, status);
+	} else if (jack == &mbhc->button_jack) {
+		pr_debug("%s: button_jack status(%#X)\n", __func__, status);
+	}
+
 	snd_soc_jack_report(jack, status, mask);
 }
 EXPORT_SYMBOL(wcd_mbhc_jack_report);
@@ -743,8 +750,12 @@ void wcd_mbhc_elec_hs_report_unplug(struct wcd_mbhc *mbhc)
 	else
 		pr_info("%s: hs_detect_plug work not cancelled\n", __func__);
 
-	pr_debug("%s: Report extension cable\n", __func__);
-	wcd_mbhc_report_plug(mbhc, 1, SND_JACK_LINEOUT);
+	if (mbhc->current_plug != MBHC_PLUG_TYPE_NONE) {
+		pr_debug("%s: Report extension cable\n", __func__);
+		wcd_mbhc_report_plug(mbhc, 1, SND_JACK_LINEOUT);
+	} else {
+		pr_debug("%s: Don't report extension cable\n", __func__);
+	}
 	/*
 	 * If PA is enabled HPHL schmitt trigger can
 	 * be unreliable, make sure to disable it
@@ -951,6 +962,11 @@ static void wcd_mbhc_swch_irq_handler(struct wcd_mbhc *mbhc)
 			mbhc->mbhc_fn->wcd_mbhc_detect_plug_type(mbhc);
 	} else if ((mbhc->current_plug != MBHC_PLUG_TYPE_NONE)
 			&& !detection_type) {
+		/* ZTE_chenjun */
+		if (mbhc->is_hs_recording) {
+			/* 0x0d1d is WCD934X_CDC_TX_INP_MUX_ADC_MUX0_CFG0 */
+			snd_soc_update_bits(codec, 0x0d1d, 0x07, 0);
+		}
 		/* Disable external voltage source to micbias if present */
 		if (mbhc->mbhc_cb->enable_mb_source)
 			mbhc->mbhc_cb->enable_mb_source(mbhc, false);
@@ -1354,6 +1370,9 @@ static int wcd_mbhc_initialise(struct wcd_mbhc *mbhc)
 	 * by an external source
 	 */
 	if (mbhc->mbhc_cfg->enable_usbc_analog) {
+		mbhc->hphl_swh = 0;
+		mbhc->gnd_swh = 0;
+
 		if (mbhc->mbhc_cb->hph_pull_up_control_v2)
 			mbhc->mbhc_cb->hph_pull_up_control_v2(codec,
 							      HS_PULLUP_I_OFF);
