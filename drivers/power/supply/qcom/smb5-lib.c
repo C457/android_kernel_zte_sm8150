@@ -7276,7 +7276,7 @@ int smblib_wls_power_enable(struct smb_charger *chg, bool enable)
 	union power_supply_propval wls_pwr_en = {0, };
 
 #ifndef ZTE_WIRELESS_CHARGER
-	enable = false;
+	enable = true;
 #endif
 	wls_pwr_en.intval = enable;
 	smblib_dbg(chg, PR_MISC, "%s wireless power!\n",
