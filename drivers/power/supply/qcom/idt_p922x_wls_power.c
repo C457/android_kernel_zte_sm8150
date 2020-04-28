@@ -2160,7 +2160,7 @@ static int p922x_set_en_pin_pinctrl_state(struct p922x_dev *chip, bool enable)
 	struct pinctrl_state *state;
 
 #ifndef ZTE_WIRELESS_CHARGER
-	enable = false;
+	enable = true;
 #endif
 	p922x_dbg(chip, PR_INTERRUPT, "enable = %d\n", enable);
 
