@@ -35,9 +35,6 @@
 #include <soc/qcom/watchdog.h>
 #include <soc/qcom/minidump.h>
 
-#include <vendor/soc/qcom/debug_policy.h>
-
-
 #define EMERGENCY_DLOAD_MAGIC1    0x322A4F99
 #define EMERGENCY_DLOAD_MAGIC2    0xC67E4350
 #define EMERGENCY_DLOAD_MAGIC3    0x77777777
@@ -51,10 +48,6 @@
 #define SCM_DLOAD_CMD			0x10
 #define SCM_DLOAD_MINIDUMP		0X20
 #define SCM_DLOAD_BOTHDUMPS	(SCM_DLOAD_MINIDUMP | SCM_DLOAD_FULLDUMP)
-
-
-
-
 
 static int restart_mode;
 static void *restart_reason;
@@ -711,15 +704,6 @@ skip_sysfs_create:
 
 	if (scm_is_call_available(SCM_SVC_PWR, SCM_IO_DEASSERT_PS_HOLD) > 0)
 		scm_deassert_ps_hold_supported = true;
-
-
-#ifdef CONFIG_ANDROID_LOGGER
-#ifdef CONFIG_ANDROID_ZLOG_BUFFER
-	if (!is_kernel_log_driver_enabled())
-		download_mode = 0;
-#endif
-#endif
-
 
 	set_dload_mode(download_mode);
 	if (!download_mode)

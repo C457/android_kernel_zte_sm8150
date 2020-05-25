@@ -45,10 +45,6 @@
 
 #include "peripheral-loader.h"
 
-#include <vendor/soc/qcom/sdlog_mem_reserve.h>
-#include <vendor/soc/qcom/vlog.h>
-
-
 #define pil_err(desc, fmt, ...)						\
 	dev_err(desc->dev, "%s: " fmt, desc->name, ##__VA_ARGS__)
 #define pil_info(desc, fmt, ...)					\
@@ -555,48 +551,6 @@ int pil_assign_mem_to_linux(struct pil_desc *desc, phys_addr_t addr,
 	return ret;
 }
 EXPORT_SYMBOL(pil_assign_mem_to_linux);
-
-
-static int pil_assign_log_mem_to_modem_and_linux(struct pil_desc *desc)
-{
-	int ret = 0;
-	int srcVM[1] = {VMID_HLOS};
-	int destVM[2] = {VMID_HLOS, VMID_MSS_MSA};
-	int destVMperm[2] = {PERM_READ | PERM_WRITE, PERM_READ | PERM_WRITE};
-	int sdlog_enable = 0;
-	int vlog_enable = 0;
-	unsigned int log_addr;
-	int log_size = 0;
-#ifdef CONFIG_VENDOR_SDLOG
-	if (sdlog_memory_reserved()) {
-		sdlog_enable = 1;
-		log_addr = sdlog_memory_get_addr();
-		log_size += sdlog_memory_get_size();
-		pil_info(desc, "%s: assign sdlog memory\n", __func__);
-	}
-#endif
-
-#ifdef CONFIG_VENDOR_VLOG
-	if (vendor_log_get_memory_addr() &&
-			vendor_log_get_memory_size()) {
-		log_addr = vendor_log_get_memory_addr();
-		vlog_enable = 1;
-		log_size += vendor_log_get_memory_size();
-		pil_info(desc, "%s: assign vlog memory\n", __func__);
-	}
-#endif
-
-	if (sdlog_enable || vlog_enable) {
-		ret = hyp_assign_phys(log_addr,
-			log_size, srcVM, 1,
-			destVM, destVMperm, 2);
-		if (ret)
-			pil_err(desc, "%s: failed for %pa address of size %zx - for vlog or sdlog rc:%d\n",
-						__func__, &log_addr, log_size, ret);
-	}
-
-	return ret;
-}
 
 int pil_assign_mem_to_subsys_and_linux(struct pil_desc *desc,
 						phys_addr_t addr, size_t size)
@@ -1370,9 +1324,6 @@ int pil_boot(struct pil_desc *desc)
 		}
 		hyp_assign = true;
 	}
-
-	if (strcmp(desc->name, "modem") == 0)
-		pil_assign_log_mem_to_modem_and_linux(desc);
 
 	trace_pil_event("before_load_seg", desc);
 

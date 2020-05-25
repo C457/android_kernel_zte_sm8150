@@ -72,10 +72,8 @@
 #include <linux/freezer.h>
 #include <linux/pid_namespace.h>
 #include <net/netns/generic.h>
-#include <linux/ratelimit.h>
-#include <linux/module.h>
+
 #include "audit.h"
-#include <vendor/soc/qcom/debug_policy.h>
 
 /* No auditing will take place until audit_initialized == AUDIT_INITIALIZED.
  * (Initialization happens after skb_init is called.) */
@@ -171,11 +169,6 @@ static DECLARE_WAIT_QUEUE_HEAD(kauditd_wait);
 
 /* waitqueue for callers who are blocked on the audit backlog */
 static DECLARE_WAIT_QUEUE_HEAD(audit_backlog_wait);
-
-static int audit_printk_no_ratelimit;
-module_param(audit_printk_no_ratelimit, int, 0644);
-MODULE_PARM_DESC(audit_printk_no_ratelimit,
-	"set to 1 to disable the printk reatelimit of audit (default 0)");
 
 static struct audit_features af = {.vers = AUDIT_FEATURE_VERSION,
 				   .mask = -1,
@@ -509,10 +502,7 @@ static void kauditd_printk_skb(struct sk_buff *skb)
 	struct nlmsghdr *nlh = nlmsg_hdr(skb);
 	char *data = nlmsg_data(nlh);
 
-	DEFINE_RATELIMIT_STATE(printk_ratelimit_audit, (5 * HZ), 1000);
-
-	if (nlh->nlmsg_type != AUDIT_EOE
-		&& (__ratelimit(&printk_ratelimit_audit) || audit_printk_no_ratelimit))
+	if (nlh->nlmsg_type != AUDIT_EOE && printk_ratelimit())
 		pr_notice("type=%d %s\n", nlh->nlmsg_type, data);
 }
 
@@ -1574,7 +1564,6 @@ static int __init audit_init(void)
 	audit_log(NULL, GFP_KERNEL, AUDIT_KERNEL,
 		"state=initialized audit_enabled=%u res=1",
 		 audit_enabled);
-	audit_printk_no_ratelimit = is_kernel_log_limit_disabled();
 
 	return 0;
 }
