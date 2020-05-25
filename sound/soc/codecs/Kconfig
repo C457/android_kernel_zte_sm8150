@@ -1177,6 +1177,4 @@ config SND_SOC_TPA6130A2
 	tristate "Texas Instruments TPA6130A2 headphone amplifier"
 	depends on I2C
 
-source "sound/soc/codecs/tfa9894/Kconfig"
-
 endmenu
