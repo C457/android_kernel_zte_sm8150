@@ -1,0 +1,41 @@
+
+menuconfig POWER_VENDOR_COMMON
+	bool "zte power policy"
+	default n
+	help
+	  Say Y here, if supported zte power policy
+
+config VENDOR_ZTE_MISC
+	tristate "zte misc module"
+	depends on POWER_VENDOR_COMMON
+	default n
+	help
+	  Say Y here to enable the "pmic voter module" driver
+
+config VENDOR_BATTERY_CAPACITY_LEARNING
+	tristate "Battery Capacity Learning driver"
+	depends on POWER_VENDOR_COMMON
+	default n
+	help
+	  Say Y here to enable the "Battery Capacity Learning" driver
+
+config VENDOR_CHARGE_ARBITRATE_SERVICE
+	tristate "Charge Arbitrate Service Driver"
+	depends on POWER_VENDOR_COMMON
+	default n
+	help
+	  Say Y here to enable the "Charge Arbitrate Service" driver
+
+config VENDOR_CHARGER_POLICY_SERVICE
+	tristate "Charger Policy Service Driver"
+	depends on POWER_VENDOR_COMMON && VENDOR_ZTE_MISC
+	default n
+	help
+	  Say Y here to enable the "Charger Policy Service" driver
+
+config VENDOR_CPU_RATE_CTRL
+	tristate "use cpu rate ctrl charging current"
+	depends on POWER_VENDOR_COMMON && VENDOR_ZTE_MISC
+	default n
+	help
+	  Say Y here to enable the "Charger Policy Service" driver

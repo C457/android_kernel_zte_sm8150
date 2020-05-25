@@ -1,0 +1,6 @@
+
+config VENDOR_IMEM_INFO
+	bool "ZTE IMEM INFO"
+	default n
+	help
+	  Say 'y' here to include support for zte imem info.

@@ -1,0 +1,19 @@
+config VENDOR_COMMON_COMPILE
+	bool "drivers/vendor/common drivers compile control"
+	default n
+	help
+	  This enables drivers/vendor/common drivers to be compiled.
+
+config VENDOR_SOC_QCOM_COMPILE
+	bool "drivers/vendor/soc/qcom drivers compile control"
+	default n
+	help
+	  This enables drivers/vendor/soc/qcom drivers to be compiled.
+
+config SOC_QCOM
+	bool "qcom common drivers"
+	default n
+	help
+	  This enables support for common driver in qcom platform.
+
+source "drivers/vendor/common/power/Kconfig"

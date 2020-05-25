@@ -1,0 +1,8 @@
+#
+# pmlog driver
+#
+config VENDOR_DPN
+  bool "DPN For Modem"
+  default n
+  help
+    This program is used for notify ap pm status to modem

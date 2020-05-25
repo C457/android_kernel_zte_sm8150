@@ -1,0 +1,2 @@
+source "drivers/vendor/soc/qcom/dpn/Kconfig"
+source "drivers/vendor/soc/qcom/imem_info/Kconfig"
