@@ -1,0 +1,23 @@
+/* for touchscreen and key */
+
+&qupv3_se17_i2c {
+	status = "ok";
+	synaptics_dsx@23 {
+		compatible = "synaptics,dsx-i2c";
+		reg = <0x23>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <122 0x2008>;
+		vdd-supply = <&pm8150_s4>;
+		avdd-supply = <&pm8150_l17>;
+		synaptics,bus-reg-name = "vdd";
+		synaptics,pwr-reg-name = "avdd";
+		synaptics,ub-i2c-addr = <0x2c>;
+		synaptics,reset-gpio = <&tlmm 54 0x0000>;
+		synaptics,irq-gpio = <&tlmm 122 0x2008>;
+		synaptics,irq-on-state = <0>;
+		synaptics,power-delay-ms = <200>;
+		synaptics,reset-delay-ms = <200>;
+		synaptics,reset-on-state = <0>;
+		synaptics,reset-active-ms = <20>;
+	};
+};

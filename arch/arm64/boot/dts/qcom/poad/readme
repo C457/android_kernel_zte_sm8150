@@ -1,0 +1,11 @@
+sm8150-v2-$(ZTE_BOARD_NAME).dts ------------------- zte created dts, usually you should not change it
+sm8150-sdx50m-mtp-$(ZTE_BOARD_NAME)-overlay ------- zte created dts overlay, usually you should not change it
+
+--------------------------------------------------------------------------------------------------------
+Usually, you are only allowed to modify the following files, take *-overlay.dtsi files as your first choice.
+
+sm8150-sdx50m-mtp-$(ZTE_BOARD_NAME)-overlay.dtsi ----- zte created dts overlay, for $(ZTE_BOARD_NAME) only
+../zte-sm8150-common-overlay.dtsi -------------------- zte created dts overlay, like sm8150-sdx50m-mtp-$(ZTE_BOARD_NAME)-overlay.dtsi, but for all kona devices
+
+sm8150-sdx50m-mtp-$(ZTE_BOARD_NAME)-diff.dtsi ----- zte created dts, in order to remove Qualcomm's dts config which could not be done by dts overlay, for $(ZTE_BOARD_NAME) only
+../zte-sm8150-common-base.dtsi -------------------- zte created dts, like sm8150-sdx50m-mtp-$(ZTE_BOARD_NAME)-diff.dtsi, but for all kona devices

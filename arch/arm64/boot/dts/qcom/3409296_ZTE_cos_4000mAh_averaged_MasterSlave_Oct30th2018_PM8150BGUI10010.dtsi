@@ -1,0 +1,141 @@
+
+qcom,3858573_zte_466573cos_3900mah_averaged_masterslave_mar13th2019 {
+	qcom,profile-revision = <24>;
+	/* #3858573_ZTE_466573cos_3900mAh_averaged_MasterSlave_Mar13th2019*/
+	qcom,max-voltage-uv = <4450000>;
+	qcom,fg-cc-cv-threshold-mv = <4445>;
+	qcom,nom-batt-capacity-mah = <4000>;
+	qcom,full-design-uah = <4000000>;
+	qcom,fastchg-current-ma = <3900>;
+	qcom,taper-fcc;
+	qcom,jeita-fcc-ranges
+		= <0 49 375000
+		50 99 1150000
+		100 449 3900000
+		450 549 1350000>;
+	qcom,jeita-fv-ranges
+		= <0 50 4450000
+		60 100 4450000
+		110 440 4450000
+		450 549 4100000>;
+	qcom,step-chg-ranges
+		= <3400000 4200000 3900000
+		4201000 4450000 2730000>;
+	qcom,batt-id-kohm = <20>;
+	qcom,battery-beta = <4250>;
+	qcom,therm-room-temp = <100000>;
+	qcom,battery-type = "3858573_zte_466573cos_3900mah_averaged_masterslave_mar13th2019";
+	qcom,therm-coefficients = <0x2318 0xd0c 0xdaf7 0xc556 0x848d>;
+	qcom,therm-center-offset = <0x70>;
+	qcom,therm-pull-up = <100>;
+	qcom,rslow-normal-coeffs = <0xb9 0x02 0x8e 0x1a>;
+	qcom,rslow-low-coeffs = <0xd9 0x0d 0xb8 0x13>;
+	qcom,checksum = <0x9334>;
+	qcom,gui-version = "PM855GUI - 1.0.0.13";
+	qcom,fg-profile-data = [
+		 09 00 42 EA
+		 D4 DD A2 DB
+		 4F D4 00 00
+		 B7 BD 62 8A
+		 FA 87 B2 92
+		 E9 94 FC 87
+		 12 00 B9 02
+		 8E 1A DF FC
+		 53 FA CE 07
+		 32 00 41 EA
+		 B4 E4 73 DB
+		 29 0A BB DA
+		 89 BA 02 23
+		 34 03 3B DD
+		 60 00 4D 00
+		 48 00 3C 00
+		 31 00 2F 00
+		 36 00 43 00
+		 42 00 46 00
+		 3C 00 60 00
+		 3C 00 42 00
+		 50 00 48 00
+		 3E 00 86 00
+		 5F 64 4E 00
+		 47 00 41 08
+		 60 00 48 00
+		 49 00 56 10
+		 4F 10 48 00
+		 7C 28 5E 48
+		 4F 58 48 0E
+		 43 00 D8 08
+		 48 20 7B 14
+		 7E 03 54 FD
+		 6C 1C 2F 03
+		 DD 05 55 22
+		 27 17 5C 42
+		 68 55 F0 03
+		 6E 13 5A 21
+		 BA 05 21 0A
+		 8F 04 F8 1C
+		 3B 03 F3 04
+		 C9 03 FA 17
+		 41 23 56 45
+		 FC 52 88 12
+		 2D 20 CC EC
+		 47 CB 73 BD
+		 DD 1C 98 C1
+		 4A 05 6B BB
+		 4D 17 B6 8B
+		 DF 84 9B 93
+		 84 90 09 80
+		 2C FA 94 05
+		 1A 02 91 F2
+		 00 00 B7 D5
+		 B4 E2 F7 FF
+		 18 E3 FF C4
+		 F8 1F 11 00
+		 CB 05 7C 03
+		 B4 06 DD 03
+		 CE 07 32 00
+		 7C 01 B5 04
+		 8F 05 F9 03
+		 85 05 34 03
+		 14 03 66 02
+		 D8 07 5D 00
+		 3F 00 40 00
+		 43 64 47 00
+		 45 00 40 08
+		 44 00 45 00
+		 45 00 42 10
+		 47 10 3C 00
+		 44 20 45 48
+		 50 58 61 0E
+		 3F 00 46 00
+		 4C 08 4C 00
+		 35 00 3D 00
+		 3C 08 44 10
+		 44 00 55 20
+		 6C 40 44 58
+		 4E 0F 48 00
+		 3C 08 25 10
+		 D8 08 84 20
+		 D5 FC 07 03
+		 CB 05 B8 1C
+		 75 23 A8 45
+		 71 52 5B 18
+		 F5 03 D9 05
+		 43 03 6E 11
+		 3F 0A 6E 20
+		 95 04 7E 03
+		 30 05 D3 1C
+		 E0 02 2B 04
+		 24 02 9C 18
+		 72 03 9B 04
+		 53 02 6E 00
+		 B1 22 15 05
+		 96 02 D8 05
+		 F1 1C C3 03
+		 87 04 EF 03
+		 85 18 27 03
+		 37 05 63 03
+		 8F 00 95 01
+		 C0 00 FA 00
+		 EA 0F 00 00
+	];
+};

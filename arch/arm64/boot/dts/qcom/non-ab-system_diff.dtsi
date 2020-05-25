@@ -1,0 +1,14 @@
+/*Only  config for non A/B system */
+
+&firmware {
+	android {
+		fstab {
+			vendor {
+				fsmgr_flags = "wait,avb";
+			};
+			vm-linux {
+				fsmgr_flags = "wait";
+			};
+		};
+	};
+};

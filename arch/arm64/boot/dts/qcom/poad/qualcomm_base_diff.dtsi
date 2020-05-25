@@ -1,0 +1,15 @@
+/*
+ * this file is ued to change qualcomm dtsi which can't be changed by overlay
+ * such as /delete-node/ /delete-property/ and alises
+ * other changes must set in overlay dtsi files
+ */
+
+&soc {
+	rpmh-regulator-ldoa13 {
+		L13A: pm8150_l13: regulator-pm8150-l13 {
+			qcom,init-mode = <RPMH_REGULATOR_MODE_HPM>;
+			qcom,init-enable = <1>;
+			regulator-always-on;
+		};
+	};
+};

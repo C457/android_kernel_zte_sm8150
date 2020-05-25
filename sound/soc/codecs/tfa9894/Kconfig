@@ -1,0 +1,2 @@
+config ZTE_FEATURE_NXP9894_SMART_PA
+	bool "zte add NXP smart pa chip tfa9894"
