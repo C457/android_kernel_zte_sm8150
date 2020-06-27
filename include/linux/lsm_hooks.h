@@ -1974,6 +1974,21 @@ struct security_hook_list {
 } __randomize_layout;
 
 /*
+ * Security blob size or offset data.
+ */
+struct lsm_blob_sizes {
+	int	lbs_cred;
+	int	lbs_file;
+	int	lbs_inode;
+	int	lbs_ipc;
+	int	lbs_key;
+	int	lbs_msg_msg;
+	int	lbs_sock;
+	int	lbs_superblock;
+	int	lbs_task;
+};
+
+/*
  * Initializing a security_hook_list structure takes
  * up a lot of space in a source file. This macro takes
  * care of the common case and reduces the amount of
@@ -1985,6 +2000,7 @@ struct security_hook_list {
 extern struct security_hook_heads security_hook_heads;
 extern char *lsm_names;
 
+extern void security_add_blobs(struct lsm_blob_sizes *needed);
 extern void security_add_hooks(struct security_hook_list *hooks, int count,
 				char *lsm);
 
@@ -2018,7 +2034,7 @@ static inline void security_delete_hooks(struct security_hook_list *hooks,
 #define __lsm_ro_after_init	__ro_after_init
 #endif /* CONFIG_SECURITY_WRITABLE_HOOKS */
 
-extern int __init security_module_enable(const char *module);
+extern bool __init security_module_enable(const char *lsm, const bool stacked);
 extern void __init capability_add_hooks(void);
 #ifdef CONFIG_SECURITY_YAMA
 extern void __init yama_add_hooks(void);
@@ -2029,6 +2045,14 @@ static inline void __init yama_add_hooks(void) { }
 void __init loadpin_add_hooks(void);
 #else
 static inline void loadpin_add_hooks(void) { };
+#endif
+
+extern int lsm_cred_alloc(struct cred *cred, gfp_t gfp);
+extern int lsm_inode_alloc(struct inode *inode);
+
+#ifdef CONFIG_SECURITY
+void lsm_early_cred(struct cred *cred);
+void lsm_early_inode(struct inode *inode);
 #endif
 
 #endif /* ! __LINUX_LSM_HOOKS_H */
